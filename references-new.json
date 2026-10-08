@@ -1,0 +1,303 @@
+[
+  {
+    "id": "commons-denim-heels",
+    "image": "assets/reference-commons-denim.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jeans_and_a_blazer%2Bkirkwood_shoes_(5019328605).jpg",
+    "credit": "Maegan Tintari · CC BY 2.0",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "changes": "Original file unchanged; fitted by CSS in the interface",
+    "publishable": true,
+    "styles": [
+      "松弛休闲",
+      "简约日常",
+      "复古皮革"
+    ],
+    "scenes": [
+      "周末出门",
+      "朋友聚会",
+      "看展"
+    ],
+    "exploration": 55,
+    "effects": [
+      "太正式"
+    ],
+    "description": "真实原照：黑色西装、浅蓝色卷边宽松牛仔裤、黑色露趾厚底高跟鞋、黑色大包。不能将照片里的高跟鞋描述成平底鞋；如用户需要久走，应在方案里调整并明确照片差异。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      },
+      {
+        "slot": "bottom",
+        "subtype": "jeans",
+        "colors": [
+          "blue"
+        ]
+      },
+      {
+        "slot": "shoes",
+        "subtype": "platform heels",
+        "colors": [
+          "black"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "commons-blue-romper",
+    "image": "assets/reference-commons-romper.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Black_Blazer,_Blue_Lace_Romper_and_White_Pointed_Shoes_(18617107735).jpg",
+    "credit": "Jamie / petitepanoply · CC BY-SA 2.0",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "changes": "Original file unchanged; fitted by CSS in the interface",
+    "publishable": true,
+    "styles": [
+      "温柔气质",
+      "彩色混搭"
+    ],
+    "scenes": [
+      "朋友聚会",
+      "约会",
+      "周末出门"
+    ],
+    "exploration": 75,
+    "effects": [
+      "过于甜美",
+      "不想露肤",
+      "太过张扬"
+    ],
+    "description": "真实原照：黑色金色拉链西装、亮蓝色蕾丝短连体裤、白色尖头平底鞋、项链。下装是短连体裤，并非长裙；腿部露肤明显，不适用于不想露肤的照片筛选。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      },
+      {
+        "slot": "bottom",
+        "subtype": "short romper",
+        "colors": [
+          "blue"
+        ]
+      },
+      {
+        "slot": "shoes",
+        "subtype": "pointed flats",
+        "colors": [
+          "white"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pexels-tailored-skirt",
+    "image": "assets/reference-pexels-mba.jpg",
+    "sourceUrl": "https://www.pexels.com/photo/fashionable-woman-in-elegant-black-blazer-outfit-36450161/",
+    "credit": "MBA Product Photography · Pexels License",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "changes": "Pexels/Unsplash delivery resized; visual content unchanged",
+    "publishable": true,
+    "fullBody": true,
+    "styles": [
+      "简约日常",
+      "温柔气质"
+    ],
+    "scenes": [
+      "日常通勤",
+      "看展",
+      "朋友聚会"
+    ],
+    "exploration": 40,
+    "effects": [
+      "太正式",
+      "不想露肤"
+    ],
+    "description": "真实全身照：深色收腰金扣西装、白色高领内搭、同色百褶短裙、白袜和黑色厚底乐福鞋。不是宽松西装；若保留用户宽松黑西装，应说明版型差异。短裙露腿，不适用于不想露肤。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pexels-printed-skirt",
+    "image": "assets/reference-pexels-eze.jpg",
+    "sourceUrl": "https://www.pexels.com/photo/woman-in-black-blazer-standing-3829858/",
+    "credit": "Eze Joshua · Pexels License",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "changes": "Pexels/Unsplash delivery resized; visual content unchanged",
+    "publishable": true,
+    "fullBody": true,
+    "styles": [
+      "彩色混搭",
+      "温柔气质"
+    ],
+    "scenes": [
+      "朋友聚会",
+      "约会",
+      "看展"
+    ],
+    "exploration": 80,
+    "effects": [
+      "太过张扬",
+      "不想露肤"
+    ],
+    "description": "真实全身照：黑色较长西装、深色上衣、黄红蓝印花中长半裙、黑色尖头鞋。鞋跟高度在照片中不可确认，不能称为已验证平底或舒适；如需久走可建议平底鞋并说明属于调整。裙长低于膝盖，露出小腿。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pexels-black-shorts",
+    "image": "assets/reference-pexels-eman.jpg",
+    "sourceUrl": "https://www.pexels.com/photo/beautiful-woman-posing-8789903/",
+    "credit": "Eman Genatilan · Pexels License",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "changes": "Pexels/Unsplash delivery resized; visual content unchanged",
+    "publishable": true,
+    "fullBody": false,
+    "styles": [
+      "松弛休闲",
+      "简约日常"
+    ],
+    "scenes": [
+      "周末出门",
+      "朋友聚会"
+    ],
+    "exploration": 65,
+    "effects": [
+      "不想露肤"
+    ],
+    "description": "真实局部照：黑色西装披肩穿、蓝灰色背心、黑色短裤。画面截至膝上，鞋和包未展示，鞋履只能是方案建议，不得声称来自照片。短裤明显露腿。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pexels-pinstripe-denim",
+    "image": "assets/reference-pexels-cottonbro.jpg",
+    "sourceUrl": "https://www.pexels.com/photo/woman-in-black-blazer-7760003/",
+    "credit": "cottonbro studio · Pexels License",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "changes": "Pexels/Unsplash delivery resized; visual content unchanged",
+    "publishable": true,
+    "fullBody": false,
+    "styles": [
+      "松弛休闲",
+      "简约日常"
+    ],
+    "scenes": [
+      "周末出门",
+      "朋友聚会",
+      "看展"
+    ],
+    "exploration": 60,
+    "effects": [
+      "不想露肤"
+    ],
+    "description": "真实局部照：深色细条纹西装、白色短款背心、浅蓝色牛仔裤，腰腹露肤。画面没有展示鞋和包，不得编造照片鞋款或全身效果；如用户需要不露腰，应调整内搭并明确差异。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unsplash-white-crop-denim",
+    "image": "assets/reference-unsplash-jd.jpg",
+    "sourceUrl": "https://unsplash.com/photos/woman-in-black-blazer-and-jeans-poses-against-white-background-P0UaqNRDCGw",
+    "credit": "JD-Photos · Unsplash License",
+    "license": "Unsplash License",
+    "licenseUrl": "https://unsplash.com/license",
+    "changes": "Pexels/Unsplash delivery resized; visual content unchanged",
+    "publishable": true,
+    "fullBody": false,
+    "styles": [
+      "简约日常",
+      "松弛休闲"
+    ],
+    "scenes": [
+      "周末出门",
+      "朋友聚会"
+    ],
+    "exploration": 60,
+    "effects": [
+      "不想露肤"
+    ],
+    "description": "真实局部照：黑色西装披在肩上、白色短款背心、蓝色牛仔裤，腰腹露肤。画面截至大腿，没有展示鞋和包；鞋履只能另提建议，不得写成照片事实。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "black"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unsplash-navy-denim",
+    "image": "assets/reference-unsplash-marina.jpg",
+    "sourceUrl": "https://unsplash.com/photos/woman-in-black-blazer-and-blue-denim-jeans-sitting-on-window-xeBMvIM_5KM",
+    "credit": "Marina Abrosimova · Unsplash License",
+    "license": "Unsplash License",
+    "licenseUrl": "https://unsplash.com/license",
+    "changes": "Pexels/Unsplash delivery resized; visual content unchanged",
+    "publishable": true,
+    "fullBody": false,
+    "styles": [
+      "简约日常",
+      "松弛休闲"
+    ],
+    "scenes": [
+      "周末出门",
+      "朋友聚会"
+    ],
+    "exploration": 35,
+    "effects": [
+      "显得沉闷",
+      "不想露肤"
+    ],
+    "description": "真实坐姿照：深海军蓝西装、深色内搭、蓝色九分牛仔裤，双脚赤足，未展示鞋和包。西装不是用户的黑色款，必须说明颜色差异。鞋履需作为建议补充，不能说照片里已有鞋。",
+    "garments": [
+      {
+        "slot": "upper",
+        "subtype": "blazer",
+        "colors": [
+          "navy"
+        ]
+      }
+    ]
+  }
+]

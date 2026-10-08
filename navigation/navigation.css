@@ -1,0 +1,35 @@
+/* Only the pill captures input; its transparent surroundings scroll through. */
+.shell{--nav-pill-height:clamp(56px,16.4vw,78px);position:relative;grid-template-rows:auto minmax(0,1fr)}
+.shell.has-preference-dock{grid-template-rows:auto minmax(0,1fr) auto}
+.shell .content{padding-bottom:calc(var(--nav-pill-height) + var(--safe-bottom) + 42px)}
+.shell.has-preference-dock .content{padding-bottom:24px}
+.shell.has-preference-dock .preference-dock{margin-bottom:calc(var(--nav-pill-height) + var(--safe-bottom) + 18px)}
+.nav-space{position:absolute;inset:auto 0 0;z-index:20;padding:8px 0 calc(var(--safe-bottom) + 10px);background:none;pointer-events:none}
+.nav.rewear-nav-host{display:block;width:61%;margin:0 auto;border:0;height:var(--nav-pill-height);padding:0;background:#111111;border-radius:999px;box-shadow:0 10px 24px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.06);pointer-events:auto}
+.rewear-navigation{width:100%;height:var(--nav-pill-height)}
+.nav.rewear-nav-host .rubber-segment__item{
+  width:auto;min-width:0;height:calc(var(--nav-pill-height) - 12px);padding:0 2px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;border-radius:999px;
+  color:var(--rs-ink);background:none;transform:none;
+}
+.nav.rewear-nav-host .rubber-segment__copy{color:inherit;opacity:1}
+.nav.rewear-nav-host button:hover{background:none}
+.nav.rewear-nav-host button[data-pressed]{transform:scale(.96)}
+.rewear-nav-icon{width:23px;height:23px;flex-shrink:0}
+.rewear-nav-label{font-size:10px;line-height:1.3;font-weight:500;letter-spacing:.5px}
+
+/* The intake steps share the navigation's rubber motion, in a single glass well. */
+.intake-progress#intake-progress-root{display:block;min-height:60px;padding:0;margin:0 0 20px;border:0;background:none}
+.rewear-step-navigation{display:grid;width:100%;height:60px;border:1px solid rgba(255,255,255,.65);background:radial-gradient(ellipse at 15% 0,rgba(255,255,255,.65),transparent 55%),linear-gradient(115deg,rgba(90,90,90,.14),rgba(210,210,210,.27) 46%,rgba(80,80,80,.13));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 8px 18px rgba(0,0,0,.075),inset 0 1px 2px rgba(255,255,255,.95),inset 0 -1px 3px rgba(255,255,255,.8),inset 1px 0 4px rgba(0,0,0,.08)}
+.intake-progress .rubber-segment__item{min-width:0;width:auto;height:50px;padding:0 5px;display:flex;flex-direction:row;justify-content:center;align-items:center;gap:7px;margin:0;border:0;background:none;color:var(--rs-ink);border-radius:26px;transform:none}
+.intake-progress .rubber-segment__surface{position:absolute;top:4px;bottom:4px;border-radius:var(--rs-thumb-radius);pointer-events:none;background:radial-gradient(ellipse at 18% 0,rgba(255,255,255,.8),transparent 58%),linear-gradient(130deg,rgba(255,255,255,.3),rgba(255,255,255,.06) 52%,rgba(100,100,100,.10));backdrop-filter:blur(12px) brightness(1.04);-webkit-backdrop-filter:blur(12px) brightness(1.04);box-shadow:inset 0 1px 2px rgba(255,255,255,.95),inset 0 -2px 5px rgba(255,255,255,.75),inset 1px 0 5px rgba(0,0,0,.12),0 3px 10px rgba(0,0,0,.13)}
+.intake-progress .rubber-segment__surface::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(70,70,70,.25) 38%,rgba(255,255,255,.15) 62%,rgba(255,255,255,.9));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.intake-progress .rubber-segment__surface::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.26) 48%,rgba(255,255,255,.02) 64%,transparent 75%);pointer-events:none}
+.intake-progress .rubber-segment__thumb{background:transparent}
+.intake-progress .rubber-segment__copy{color:var(--rs-ink-active);opacity:1}
+.intake-progress button:hover{background:none}
+.intake-progress button[data-pressed]{transform:scale(.96)}
+.intake-progress .rewear-step-copy{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;color:inherit}
+.intake-progress .rewear-step-zh{font-size:13px;font-weight:500;line-height:1.2;color:inherit;white-space:nowrap}
+.intake-progress .rewear-step-en{font-size:9px;line-height:1.2;letter-spacing:.4px;color:inherit;white-space:nowrap}
+@media(max-width:350px){.intake-progress .rubber-segment__item{gap:5px;padding-inline:3px}.intake-progress .rewear-step-zh{font-size:12px}.intake-progress .rewear-step-en{letter-spacing:.2px}}

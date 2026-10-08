@@ -1,0 +1,13 @@
+node_modules/
+navigation/node_modules/
+.env
+.env.*
+!.env.example
+.runtime/
+.openai/
+storage/
+*.log
+__pycache__/
+*-preview.png
+coze-plan-current-demo.png
+coze-upload-handoff.png

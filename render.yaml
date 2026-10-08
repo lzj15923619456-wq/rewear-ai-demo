@@ -1,0 +1,28 @@
+# Temporary demo: the free instance loses uploads and SQLite data on restart.
+services:
+  - type: web
+    name: rewear-ai-demo
+    runtime: node
+    plan: free
+    buildCommand: npx --yes pnpm@11.25.0 install --prod --frozen-lockfile
+    startCommand: PUBLIC_ORIGIN=$RENDER_EXTERNAL_URL node server.cjs
+    healthCheckPath: /__rewear_health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: COZE_ANALYZE_BASE_URL
+        sync: false
+      - key: COZE_ANALYZE_TOKEN
+        sync: false
+      - key: COZE_STYLIST_BASE_URL
+        sync: false
+      - key: COZE_STYLIST_TOKEN
+        sync: false
+      - key: DATA_DIR
+        value: /tmp/rewear-demo
+      - key: AI_USER_DAILY_LIMIT
+        value: 12
+      - key: AI_GLOBAL_DAILY_LIMIT
+        value: 60

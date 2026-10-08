@@ -1,0 +1,14 @@
+/* Full outfit cards retain their readable width; receding cards provide depth. */
+.rewear-outfit-carousel{min-height:0;isolation:isolate;cursor:grab}
+.rewear-outfit-carousel:focus-visible{outline:2px solid #777;outline-offset:3px;border-radius:22px}
+.rewear-outfit-carousel .depth-carousel__card{background:#fff;box-shadow:0 14px 30px rgba(0,0,0,.12),0 4px 12px rgba(0,0,0,.06)}
+.rewear-outfit-carousel .deck-card{box-shadow:none;border:0;width:100%;transform:none;animation:none}
+.rewear-outfit-carousel .depth-carousel__content{height:auto}
+.rewear-outfit-carousel .deck-photo{touch-action:pan-y}
+.rewear-outfit-carousel .more-outfits-card{min-height:650px}
+#outfit-carousel-root{position:relative;width:100%}
+.outfit-deck-section .deck-hint{margin-bottom:0}
+.outfit-deck-section .deck-controls{margin-top:0}
+.view-results .content{scroll-padding-bottom:calc(var(--nav-pill-height) + var(--safe-bottom) + 26px)}
+.rewear-outfit-carousel .card-actions button{scroll-margin-bottom:calc(var(--nav-pill-height) + var(--safe-bottom) + 26px)}
+@media(max-width:350px){.rewear-outfit-carousel .more-outfits-card{min-height:610px}}

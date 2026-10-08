@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>再穿 REWEAR · 微信小程序尺寸预览</title>
+  <style>
+    :root{color-scheme:light;--device-scale:1}
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden}
+    body{background:radial-gradient(ellipse at 50% 42%,#f4f4f4 0%,#e4e4e4 58%,#d9d9d9 100%);color:#3f3f3f;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    .preview{height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:22px 28px}
+    .preview-heading{text-align:center;flex-shrink:0}
+    .preview-heading p{margin:0 0 5px;font-size:10px;letter-spacing:4px;color:#787878}
+    .preview-heading h1{margin:0;font-size:16px;font-weight:400;letter-spacing:2px}
+    .phone-space{position:relative;width:calc(420px * var(--device-scale));height:calc(874px * var(--device-scale));flex-shrink:0}
+    .iphone{position:absolute;left:0;top:0;width:420px;height:874px;transform:scale(var(--device-scale));transform-origin:top left;padding:10px;border:2px solid #8c8c8c;border-radius:62px;background:linear-gradient(120deg,#676767,#161616 24%,#373737 58%,#939393);box-shadow:0 0 0 1px #3b3b3b,0 0 0 3px rgba(255,255,255,.28),0 30px 65px rgba(43,43,43,.25),0 5px 12px rgba(30,30,30,.15)}
+    .iphone:before{content:"";position:absolute;inset:5px;border:1px solid #0d0d0d;border-radius:57px;pointer-events:none}
+    .screen{position:relative;display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;border:3px solid #090909;border-radius:49px;background:#f5f5f5}
+    .status-bar{background:#ffffff;position:relative;flex:0 0 47px;display:flex;align-items:center;justify-content:space-between;padding:0 20px 0;color:#181818;user-select:none}
+    .time{font-size:14px;font-weight:600;letter-spacing:.1px}
+    .island{position:absolute;top:0;left:50%;transform:translateX(-50%);width:210px;height:32px;border-radius:0 0 20px 20px;background:#0a0a0a;pointer-events:none}
+    .island:after{content:"";position:absolute;right:28px;top:10px;width:9px;height:9px;border-radius:50%;background:#191919}
+    .system-icons{display:flex;align-items:center;gap:5px}.system-icons svg{display:block}
+    iframe{display:block;width:100%;min-height:0;flex:1;border:0;background:#f5f5f5}
+    .home-area{position:absolute;left:0;right:0;bottom:0;height:34px;display:grid;place-items:center;pointer-events:none;user-select:none}
+    .wechat-capsule{position:absolute;top:53px;right:7px;width:87px;height:32px;display:flex;align-items:center;justify-content:space-evenly;border:1px solid #e5e5e5;border-radius:18px;background:rgba(255,255,255,.9);color:#111;pointer-events:none}.menu-dots{font:bold 17px/1 Arial;letter-spacing:1px}.capsule-close{position:relative;width:17px;height:17px;border:2px solid #111;border-radius:50%}.capsule-close:before{content:"";position:absolute;left:-12px;top:-3px;height:20px;width:1px;background:#ddd}.capsule-close:after{content:"";position:absolute;inset:3px;background:#111;border-radius:50%}
+    .home-indicator{width:132px;height:5px;border-radius:99px;background:#181818;margin-top:10px}
+    .screen.is-welcome{background:#fff}
+    .screen.is-welcome .status-bar{position:absolute;left:0;right:0;top:0;height:47px;z-index:2;background:transparent;color:#fff}
+    .screen.is-welcome .wechat-capsule{z-index:2;background:rgba(0,0,0,.16);border-color:rgba(255,255,255,.45);color:#fff}
+    .screen.is-welcome .capsule-close{border-color:#fff}
+    .screen.is-welcome .capsule-close:before{background:rgba(255,255,255,.45)}
+    .screen.is-welcome .capsule-close:after{background:#fff}
+    .hardware-button{position:absolute;width:4px;border-radius:3px;background:linear-gradient(90deg,#4e4e4e,#a9a9a9,#4e4e4e);box-shadow:0 0 0 1px #484848}
+    .action-button{left:-5px;top:121px;height:23px}.volume-up{left:-5px;top:172px;height:48px}.volume-down{left:-5px;top:235px;height:48px}.power-button{right:-5px;top:203px;height:74px}
+    .preview-caption{margin:0;font-size:11px;letter-spacing:1px;color:#757575;text-align:center;flex-shrink:0}
+    @media(max-width:500px){.preview{gap:15px;padding:18px 20px}.preview-heading h1{font-size:14px}.preview-heading p{font-size:9px}}
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <header class="preview-heading"><p>REWEAR</p><h1>微信小程序尺寸预览</h1></header>
+    <div class="phone-space">
+      <div class="iphone" aria-label="iPhone 12/13 (Pro) 微信小程序样机">
+        <span class="hardware-button action-button" aria-hidden="true"></span><span class="hardware-button volume-up" aria-hidden="true"></span><span class="hardware-button volume-down" aria-hidden="true"></span><span class="hardware-button power-button" aria-hidden="true"></span>
+        <div class="screen">
+          <div class="status-bar" aria-hidden="true"><span class="time">9:41</span><span class="island"></span><span class="system-icons"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect x="0" y="9" width="3" height="5" rx=".8"/><rect x="5" y="6" width="3" height="8" rx=".8"/><rect x="10" y="3" width="3" height="11" rx=".8"/><rect x="15" y="0" width="3" height="14" rx=".8"/></svg><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 4a11 11 0 0 1 14 0M5 7a6.5 6.5 0 0 1 8 0M8 10a2 2 0 0 1 2 0"/><circle cx="9" cy="12.4" r=".6" fill="currentColor" stroke="none"/></svg><svg width="27" height="14" viewBox="0 0 27 14"><rect x=".6" y="1" width="22.5" height="12" rx="3" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="3" y="3.4" width="17.8" height="7.2" rx="1.5" fill="currentColor"/><path d="M25 5v4" stroke="currentColor" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/></svg></span></div>
+          <iframe id="rewear-screen" src="./?preview=wechat" title="再穿 REWEAR 可交互移动端演示"></iframe>
+          <div class="wechat-capsule" aria-hidden="true"><span class="menu-dots">•••</span><span class="capsule-close"></span></div>
+          <div class="home-area" aria-hidden="true"><span class="home-indicator"></span></div>
+        </div>
+      </div>
+    </div>
+    <p class="preview-caption">iPhone 12/13 (Pro) · 390 × 844<br>状态栏 47 · 导航栏 44 · 底部安全区 34</p>
+  </main>
+  <script>
+    function fitPhone(){const scale=Math.min(1,(innerWidth-56)/420,(innerHeight-152)/874);document.documentElement.style.setProperty('--device-scale',Math.max(.15,scale).toFixed(4))}
+    fitPhone();addEventListener('resize',fitPhone);
+    const rewearFrame=document.querySelector('#rewear-screen');
+    function setWelcomePreview(welcome){document.querySelector('.screen').classList.toggle('is-welcome',welcome)}
+    addEventListener('message',event=>{if(event.origin===location.origin&&event.source===rewearFrame.contentWindow&&event.data?.type==='rewear-view')setWelcomePreview(event.data.view==='welcome')});
+    rewearFrame.addEventListener('load',()=>setWelcomePreview(rewearFrame.contentDocument.documentElement.classList.contains('is-welcome')));
+  </script>
+</body>
+</html>

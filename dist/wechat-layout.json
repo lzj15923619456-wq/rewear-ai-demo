@@ -1,0 +1,32 @@
+{
+  "model": "iPhone 12/13 (Pro)",
+  "screenWidth": 390,
+  "screenHeight": 844,
+  "pixelRatio": 3,
+  "statusBarHeight": 47,
+  "navigationBarHeight": 44,
+  "tabBarContentHeight": 64,
+  "tabBarHeightRule": "clamp(56px, 16.4vw, 78px)",
+  "tabBarWidthRatio": 0.61,
+  "tabBarOverlay": true,
+  "tabBarTopGap": 8,
+  "tabBarBottomGap": 10,
+  "tabBarSideInsetRatio": 0.195,
+  "safeBottom": 34,
+  "menu": {
+    "top": 53,
+    "right": 7,
+    "width": 87,
+    "height": 32
+  },
+  "pagePadding": 14,
+  "productPhotoRatio": "4:3",
+  "navigationStyle": "custom",
+  "source": {
+    "vendor": "微信开发者工具 Stable 2.02.2608080",
+    "file": "js/60f666ee599db3dcc3e1aff3416c7efd.json",
+    "observedProject": "REWEAR",
+    "effectiveLibraryVersion": "3.17.3"
+  },
+  "note": "屏幕与系统高度来自本机开发者工具内置机型。底部导航宽度占61%，390px屏幕下约64px高，外围透明并悬浮在内容上，内容末尾保留滚动留白。它是参考图的自定义设计。微信胶囊为浏览器示意值；迁移时必须以 wx.getMenuButtonBoundingClientRect() 返回值为准。"
+}
