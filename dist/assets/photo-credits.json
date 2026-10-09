@@ -1,5 +1,5 @@
 {
-  "edition": "public-source-2026-10-09",
+  "edition": "user-reference-layout-2026-10-09",
   "photographsGenerated": false,
   "references": [
     {
@@ -304,22 +304,6 @@
       ]
     }
   ],
-  "legacyImageReplacements": {
-    "blazer-model.jpg": "pexels-tailored-skirt",
-    "outfit-denim.jpg": "commons-denim-heels",
-    "outfit-monochrome.jpg": "unsplash-white-crop-denim",
-    "outfit-skirt.jpg": "pexels-printed-skirt",
-    "style-warm-skirt.jpg": "commons-blue-romper",
-    "style-color.jpg": "pexels-printed-skirt",
-    "style-white-denim.jpg": "unsplash-white-crop-denim",
-    "style-black.jpg": "pexels-tailored-skirt",
-    "style-mini.jpg": "pexels-black-shorts",
-    "style-preppy.jpg": "pexels-tailored-skirt",
-    "style-leather.jpg": "commons-denim-heels",
-    "style-airy-skirt.jpg": "commons-blue-romper",
-    "avoid-sweet.jpg": "commons-blue-romper",
-    "avoid-slouchy.jpg": "commons-denim-heels"
-  },
   "scenes": [
     {
       "name": "日常通勤",
@@ -370,5 +354,10 @@
       "imageUrl": "https://images.pexels.com/photos/7763082/pexels-photo-7763082.jpeg?auto=compress&cs=tinysrgb&w=900"
     }
   ],
-  "avatar": "User-provided demo avatar; separate from uploaded garment photos"
+  "avatar": "User-provided demo avatar; separate from uploaded garment photos",
+  "interfacePhotos": {
+    "basis": "User-supplied REWEAR-deploy-2026-10-05(2).zip",
+    "metadata": "selection-photos.json and reference-photos.json",
+    "licenseStatus": "Original editorial interface photos restored at user request; redistribution rights not independently verified. AI reference index remains separately licensed."
+  }
 }

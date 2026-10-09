@@ -3,6 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const sharp = require('sharp');
+const { createPhotoSearch, analyzedReferences } = require('./photo-search.cjs');
 
 const slots = ['upper', 'bottom', 'shoes'];
 const text = (value, max = 1000) => typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -91,6 +92,8 @@ function createApi(options = {}) {
   const write = (id, data) => db.prepare('INSERT INTO users VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').run(id, JSON.stringify(data));
   const ready = kind => Boolean(config[`COZE_${kind}_BASE_URL`] && config[`COZE_${kind}_TOKEN`]);
   const fetcher = options.fetch || fetch;
+  const photoSearch = createPhotoSearch({ db, dataDir, fetcher });
+  const searchEnabled = config.PHOTO_SEARCH_ENABLED !== '0';
   async function run(kind, payload) {
     if (!ready(kind)) throw fail(503, 'Coze 工作流尚未配置完成，请稍后重试');
     const base = new URL(config[`COZE_${kind}_BASE_URL`]);
@@ -145,10 +148,17 @@ function createApi(options = {}) {
       }
       const data = read(user);
       if (pathname === '/api/status' && req.method === 'GET') {
-        send(res, 200, { analyzeReady: ready('ANALYZE'), stylistReady: ready('STYLIST'), referenceCount: references.length, mode: 'coze', identity: 'anonymous-session', uploadProcessing: 'coze', storage: 'sqlite' }); return true;
+        send(res, 200, { analyzeReady: ready('ANALYZE'), stylistReady: ready('STYLIST'), referenceCount: references.length, imageSearch: searchEnabled ? 'openverse' : 'disabled', mode: 'coze', identity: 'anonymous-session', uploadProcessing: 'coze', storage: 'sqlite' }); return true;
       }
       if (pathname === '/api/records' && req.method === 'GET') {
         send(res, 200, { plans: data.plans, items: data.items.map(({ imageData, ...item }) => item), outfits: data.outfits }); return true;
+      }
+      const referenceImage = /^\/api\/reference-images\/([a-f0-9-]+)\.jpg$/.exec(pathname);
+      if (referenceImage && req.method === 'GET') {
+        const file = photoSearch.image(referenceImage[1]);
+        if (!file || !fs.existsSync(file)) throw fail(404, '参考图片暂不可用');
+        res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+        fs.createReadStream(file).on('error', () => res.destroy()).pipe(res); return true;
       }
       if (pathname.startsWith('/api/items/') && pathname.endsWith('/image') && req.method === 'GET') {
         const item = data.items.find(i => i.itemId === pathname.split('/')[3]);
@@ -163,7 +173,7 @@ function createApi(options = {}) {
         requireValue(slots.includes(input.slot), '衣物类别无效');
         if (!ready('ANALYZE') && !input.sample) throw fail(503, '识别工作流尚未配置');
         if (data.items.length >= 60) throw fail(409, '衣柜已达到本次 Demo 的保存上限');
-        const image = input.sample ? await sharp(path.join(__dirname, 'dist/assets/reference-commons-denim.jpg')).resize({ width: 1000, withoutEnlargement: true }).jpeg().toBuffer() : await decodeImage(input.imageData);
+        const image = input.sample ? await sharp(path.join(__dirname, 'dist/assets/blazer-product-white.png')).resize({ width: 1000, withoutEnlargement: true }).jpeg().toBuffer() : await decodeImage(input.imageData);
         requireValue(!input.sample || input.slot === 'upper', '示例仅支持上衣');
         const itemId = crypto.randomUUID();
         let result;
@@ -201,24 +211,36 @@ function createApi(options = {}) {
         requireValue(lockedItems.every(Boolean) && new Set(lockedItems.map(i => i.slot)).size === lockedItems.length, '请先确认所有单品，每类最多一件');
         const exclude = list(input.excludeReferenceIds, 80);
         let candidates = references.filter(ref => !exclude.includes(ref.id) && !(request.requirements.avoid.includes('不想露肤') && ref.effects.includes('不想露肤')));
-        // ponytail: first release's photo index covers black blazers; expand verified garment tags before widening this gate.
+        // shortcut: curated fallback covers women's black blazers; web search handles other garments.
         const upper = lockedItems.find(i => i.slot === 'upper');
         if (request.profile.gender !== '女性' || upper && (!/blazer|西装|西服/.test(upper.attributes.subtype || '') || !upper.attributes.colors.some(c => ['black', '黑色', '黑'].includes(c)))) candidates = [];
         candidates.sort((a, b) => scoreReference(b, request.requirements).percent - scoreReference(a, request.requirements).percent);
         candidates = candidates.slice(0, 24);
-        if (!candidates.length) { send(res, 200, { status: 'insufficient_references', outfits: [], warnings: ['当前真实图库没有适配这些条件的参考，请调整条件或等待图库扩充。'] }); return true; }
-        const count = Math.min(6, candidates.length);
         busy.add(user);
         try {
           quota(user, req.socket.remoteAddress);
           const snapshot = { ...request, lockedItems: lockedItems.map(i => ({ itemId: i.itemId, slot: i.slot, name: i.name, ...i.attributes })) };
+          const warnings = [];
+          if (searchEnabled) {
+            let photos;
+            try { photos = await photoSearch.search(lockedItems, request.requirements, exclude); }
+            catch (error) { photos = []; warnings.push(error.status ? error.message : '图片检索连接暂时失败'); }
+            if (photos.length) {
+              const inspection = await run('STYLIST', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'inspect_references', ...snapshot, imageCandidates: photos.map(({id,imageData}) => ({referenceId:id,imageUrl:imageData})) } });
+              const checked = analyzedReferences(inspection, photos, lockedItems);
+              if (checked.length) candidates = checked;
+              warnings.push(`已在线检索并看图核对，本轮通过 ${checked.length} 张参考；图片与已有衣物仍可能存在差异。`);
+            } else warnings.push('本次在线检索未取得可用图片；仅在已有参考确实适用时提供方案。');
+          }
+          if (!candidates.length) { send(res, 200, { status: 'insufficient_references', outfits: [], warnings: [...warnings, '未找到适合这些单品的参考图片，请调整条件或稍后再试。'] }); return true; }
+          const count = Math.min(6, candidates.length);
           const payload = { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'recommend', ...snapshot, referenceCandidates: candidates.map(({ id, styles, scenes, exploration, effects, description }) => ({ referenceId: id, styles, scenes, exploration, effects, description })), count };
           const result = await run('STYLIST', { payload });
           const rows = validateOutfits(result, candidates, lockedItems, count);
-          const generated = rows.map(row => ({ id: crypto.randomUUID(), referenceId: row.reference.id, ai: true, version: 1, tag: 'REWEAR / AI', title: row.title, subtitle: row.subtitle, style: row.style, reason: row.reason, difference: row.difference || '真实参考照片未换成你的衣物，请以保留单品和搭配清单为准。', keep: row.keep, avoid: row.avoid, items: row.items, image: row.reference.image, sourceUrl: row.reference.sourceUrl, credit: row.reference.credit, license: row.reference.license, licenseUrl: row.reference.licenseUrl, match: scoreReference(row.reference, request.requirements), requirementsSnapshot: snapshot, lockedItemIds: itemIds, inputItems: lockedItems.map(({ imageData, ...i }) => i) }));
+          const generated = rows.map(row => ({ id: crypto.randomUUID(), referenceId: row.reference.id, ai: true, version: 1, tag: 'REWEAR / AI', title: row.title, subtitle: row.subtitle, style: row.style, reason: row.reason, difference: row.difference || '真实参考照片未换成你的衣物，请以保留单品和搭配清单为准。', keep: row.keep, avoid: row.avoid, items: row.items, image: row.reference.image, sourceUrl: row.reference.sourceUrl, credit: row.reference.credit, license: row.reference.license, licenseUrl: row.reference.licenseUrl, photoChanges: row.reference.changes, match: scoreReference(row.reference, request.requirements), requirementsSnapshot: snapshot, lockedItemIds: itemIds, inputItems: lockedItems.map(({ imageData, ...i }) => i) }));
           const latest = read(user); latest.outfits.push(...generated); latest.outfits = latest.outfits.slice(-120); write(user, latest);
           const status = (!result.status || result.status === 'completed') && generated.length < 6 ? 'insufficient_references' : result.status || 'completed';
-          const warnings = list(result.warnings);
+          warnings.push(...list(result.warnings));
           if (generated.length > 0 && generated.length < 6) warnings.push(`当前条件下本轮提供 ${generated.length} 套真实参考方案，不足六套时不会重复凑数。`);
           send(res, 200, { status, outfits: generated, questions: list(result.questions), warnings, requirementsSnapshot: snapshot });
         } finally { busy.delete(user); }
@@ -249,7 +271,7 @@ function createApi(options = {}) {
           const result = await run('STYLIST', { payload });
           if (action === 'answer') { requireValue(text(result.answer, 3000), 'AI 未返回回答'); send(res, 200, { answer: text(result.answer, 3000) }); }
           else {
-            const candidate = references.filter(ref => ref.id === outfit.referenceId);
+            const candidate = [{ id: outfit.referenceId, image: outfit.image, sourceUrl: outfit.sourceUrl, credit: outfit.credit, license: outfit.license, licenseUrl: outfit.licenseUrl, styles: [outfit.style] }];
             const lockedItems = outfit.requirementsSnapshot.lockedItems;
             const rows = validateOutfits(result, candidate, lockedItems, 1);
             requireValue(rows.length === 1, 'AI 未返回有效调整');

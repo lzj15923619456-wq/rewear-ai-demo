@@ -30,6 +30,9 @@ def parse_model_result(raw, request):
             if not isinstance(attributes.get("colors"), list):
                 raise ValueError("Invalid colors")
         result["itemId"] = request["itemId"]
+    elif action == "inspect_references":
+        if status not in ("completed", "insufficient_references") or not isinstance(result.get("references"), list):
+            raise ValueError("Invalid reference analysis")
     elif action == "answer":
         if status != "completed" or not isinstance(result.get("answer"), str) or not result["answer"].strip():
             raise ValueError("Missing answer")

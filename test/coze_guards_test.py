@@ -1,6 +1,7 @@
 import asyncio
 import ast
 import json
+import logging
 import os
 from pathlib import Path
 import sys
@@ -46,7 +47,7 @@ class OutputTests(unittest.TestCase):
             def invoke(self, **kwargs):
                 Client.calls += 1
                 return type("Response", (), {"content": '{"attributes":None}'})()
-        env = {"json": json, "parse_model_result": parse_model_result, "LLMClient": Client,
+        env = {"json": json, "logger": logging.getLogger("guard-tests"), "parse_model_result": parse_model_result, "LLMClient": Client,
                "SystemMessage": lambda **kw: kw, "HumanMessage": lambda **kw: kw, "VISION": "", "STYLIST": ""}
         exec(compile(ast.Module(body=[node], type_ignores=[]), "call_model", "exec"), env)
         result = env["call_model"](type("State", (), {"payload": {**self.request, "imageUrl": "unit-test-image"}})(), None,
@@ -54,6 +55,15 @@ class OutputTests(unittest.TestCase):
         self.assertEqual(Client.calls, 1)
         self.assertEqual(result["warnings"], ["invalid_model_output"])
         self.assertEqual(result["status"], "error")
+
+    def test_reference_analysis_and_truncated_output(self):
+        request = {"action": "inspect_references", "requestId": "trusted"}
+        result = parse_model_result('{"status":"completed","references":[]}', request)
+        self.assertEqual(result["requestId"], "trusted")
+        for raw in ('{"status":"completed","references":{}}', '{"status":"completed","references":[',
+                    '```json\n{"status":"completed"', '{"status":"completed","references":[]} explanation'):
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                parse_model_result(raw, request)
 
 
 class AuthTests(unittest.TestCase):

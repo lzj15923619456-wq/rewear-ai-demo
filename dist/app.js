@@ -1,6 +1,6 @@
 const icons={spark:'<path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3Z"/>',closet:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9 11v3m6-3v3"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/>',check:'<path d="m5 12 4 4L19 6"/>',shield:'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/>'};
 const icon=n=>`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[n]||icons.spark}</svg>`;
-const UPPER_SAMPLE_IMAGE='assets/reference-commons-denim.jpg';
+const UPPER_SAMPLE_IMAGE='assets/blazer-product-white.png';
 const itemSlots=[{id:'upper',label:'上衣',empty:'添加一件上衣'},{id:'bottom',label:'裤装',empty:'添加一件裤装'},{id:'shoes',label:'鞋类',empty:'添加一双鞋'}];
 const state={view:'welcome',scenes:['日常通勤'],avoids:['太正式','显得沉闷'],styles:['简约日常'],change:'稍作尝试',changeAmount:50,intakeItems:{upper:null,bottom:null,shoes:null},generated:false,deckIndex:0,deckLimit:6,selected:null,owned:{},substitutions:{},revisions:{},saved:[],relaxed:[],feedback:{},personal:{'性别':'女性','年龄':'29'},note:'',budget:300,wardrobe:[],previewMode:'model'};
 

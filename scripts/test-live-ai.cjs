@@ -26,7 +26,7 @@ async function main() {
   const report = {startedAt:new Date().toISOString(),mode:'real-coze',checks:[]};
   const check = (name,detail) => {report.checks.push({name,detail});console.log(name+': '+detail);};
   async function request(url,body,method=body?'POST':'GET',visitor=cookie) {
-    const response = await fetch(base+url,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),Cookie:visitor,...(process.env.PUBLIC_ORIGIN?{Origin:process.env.PUBLIC_ORIGIN}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(80000)});
+    const response = await fetch(base+url,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),Cookie:visitor,...(process.env.PUBLIC_ORIGIN?{Origin:process.env.PUBLIC_ORIGIN}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(200000)});
     if (!visitor && response.headers.get('set-cookie')) cookie=response.headers.get('set-cookie').split(';')[0];
     const result = await response.json();
     assert.ok(response.ok,`${url}: HTTP ${response.status}, ${result.error||'请求失败'}`);

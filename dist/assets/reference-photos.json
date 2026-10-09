@@ -1,0 +1,55 @@
+{
+  "verifiedOn": "2026-10-03",
+  "retrieval": "Public editorial page and original image URLs downloaded successfully via Invoke-WebRequest. Visual inspection performed on all selected images.",
+  "licenseStatus": "Publicly accessible editorial photographs. Redistribution license was not verified; retain source links and credits.",
+  "references": [
+    {
+      "id": "denim",
+      "file": "outfit-denim.jpg",
+      "title": "黑西装与直筒牛仔裤",
+      "source": "Who What Wear",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146077960-main.jpg",
+      "articleImageCredit": "@ada_oguntodu",
+      "observed": "宽松黑色双排扣西装、黑色短上衣、蓝色直筒牛仔裤、黑色乐福鞋、白袜、斑马纹渔夫帽",
+      "differences": "相似单品，无法确认与用户上传西装为同款；若不接受露腰，可换常规长度内搭；图中帽子为可选配饰",
+      "inspected": true
+    },
+    {
+      "id": "monochrome",
+      "file": "outfit-monochrome.jpg",
+      "title": "黑白层次与白色阔腿裤",
+      "source": "Who What Wear",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1585853419327-main.jpg",
+      "articleImageCredit": "@aemiliafay",
+      "observed": "黑色长款西装、浅色Polo上衣、白色宽腿九分裤、深色踝靴、白色棒球帽、红色肩包",
+      "differences": "相似单品；参考图下装是白色九分宽腿裤，帽子和红色包为可选配饰",
+      "inspected": true
+    },
+    {
+      "id": "skirt",
+      "file": "outfit-skirt.jpg",
+      "title": "黑西装与中长裙的轻松混搭",
+      "source": "Who What Wear",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146541913-main.jpg",
+      "articleImageCredit": "@tamaramory",
+      "observed": "黑色绒感西装、白色图案T恤、黑色花纹中裙、白色运动鞋、白色条纹长袜、棕色小包",
+      "differences": "相似单品；参考图西装为绒感面料，裙子为黑色花纹中裙，并非纯色缎面长裙",
+      "inspected": true
+    },
+    {
+      "id": "blazer-model",
+      "file": "blazer-model.jpg",
+      "title": "黑色宽松西装模特图",
+      "source": "Who What Wear",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1631558857871-main.jpg",
+      "articleProductLabel": "Mango + Pocketed Oversize Blazer",
+      "observed": "黑色宽松西装、白衬衫、黑裤的模特展示",
+      "differences": "非平铺单品图；不能声称为用户自己的西装照片",
+      "inspected": true
+    }
+  ]
+}

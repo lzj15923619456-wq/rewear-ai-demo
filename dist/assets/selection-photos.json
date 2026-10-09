@@ -1,0 +1,314 @@
+{
+  "verifiedOn": "2026-10-04",
+  "photosAreGenerated": false,
+  "sceneLicense": "Pexels Free license as displayed on source pages",
+  "styleLicense": "Public editorial reference photographs; redistribution rights not confirmed. Source and article credits retained.",
+  "scenes": [
+    {
+      "name": "日常通勤",
+      "image": "assets/scene-work.jpg",
+      "hint": "上班 · 办公",
+      "credit": "Mikhail Nilov",
+      "sourceUrl": "https://www.pexels.com/photo/woman-and-men-working-at-office-8102000/",
+      "imageUrl": "https://images.pexels.com/photos/8102000/pexels-photo-8102000.jpeg?auto=compress&cs=tinysrgb&w=900"
+    },
+    {
+      "name": "周末出门",
+      "image": "assets/scene-weekend.jpg",
+      "hint": "咖啡 · 逛街",
+      "credit": "Amar Preciado",
+      "sourceUrl": "https://www.pexels.com/photo/woman-enjoying-coffee-at-a-cozy-cafe-28793163/",
+      "imageUrl": "https://images.pexels.com/photos/28793163/pexels-photo-28793163.jpeg?auto=compress&cs=tinysrgb&w=900"
+    },
+    {
+      "name": "朋友聚会",
+      "image": "assets/scene-friends.jpg",
+      "hint": "聚餐 · 相聚",
+      "credit": "Oktay Köseoğlu",
+      "sourceUrl": "https://www.pexels.com/photo/group-of-friends-enjoying-tea-at-an-indoor-cafe-29804283/",
+      "imageUrl": "https://images.pexels.com/photos/29804283/pexels-photo-29804283.jpeg?auto=compress&cs=tinysrgb&w=900"
+    },
+    {
+      "name": "约会",
+      "image": "assets/scene-date.jpg",
+      "hint": "晚餐 · 散步",
+      "credit": "Katerina Holmes",
+      "sourceUrl": "https://www.pexels.com/photo/couple-enjoying-romantic-date-in-restaurant-5911145/",
+      "imageUrl": "https://images.pexels.com/photos/5911145/pexels-photo-5911145.jpeg?auto=compress&cs=tinysrgb&w=900"
+    },
+    {
+      "name": "旅行",
+      "image": "assets/scene-travel.jpg",
+      "hint": "出游 · 探索",
+      "credit": "Rachel Claire",
+      "sourceUrl": "https://www.pexels.com/photo/woman-with-a-backpack-walking-along-a-beach-6762136/",
+      "imageUrl": "https://images.pexels.com/photos/6762136/pexels-photo-6762136.jpeg?auto=compress&cs=tinysrgb&w=900"
+    },
+    {
+      "name": "看展",
+      "image": "assets/scene-gallery.jpg",
+      "hint": "艺术 · 展览",
+      "credit": "Ahsen",
+      "sourceUrl": "https://www.pexels.com/photo/people-inside-an-art-gallery-7763082/",
+      "imageUrl": "https://images.pexels.com/photos/7763082/pexels-photo-7763082.jpeg?auto=compress&cs=tinysrgb&w=900"
+    }
+  ],
+  "styles": [
+    {
+      "name": "简约日常",
+      "image": "assets/blazer-model.jpg",
+      "caption": "黑西装与白衬衫，干净耐看",
+      "tags": [
+        "白衬衫",
+        "基础款"
+      ],
+      "outfits": [
+        "denim",
+        "mono"
+      ],
+      "width": 1001,
+      "height": 1400,
+      "credit": "Mango",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1631558857871-main.jpg"
+    },
+    {
+      "name": "松弛休闲",
+      "image": "assets/outfit-denim.jpg",
+      "caption": "宽松西装配牛仔，舒服地出门",
+      "tags": [
+        "牛仔",
+        "乐福鞋"
+      ],
+      "outfits": [
+        "denim"
+      ],
+      "width": 1080,
+      "height": 1350,
+      "credit": "@ada_oguntodu",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146077960-main.jpg"
+    },
+    {
+      "name": "温柔气质",
+      "image": "assets/outfit-skirt.jpg",
+      "caption": "中长裙与运动鞋，柔和又自在",
+      "tags": [
+        "中长裙",
+        "运动鞋"
+      ],
+      "outfits": [
+        "skirt"
+      ],
+      "width": 1080,
+      "height": 1350,
+      "credit": "@tamaramory",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146541913-main.jpg"
+    },
+    {
+      "name": "利落都市",
+      "image": "assets/outfit-monochrome.jpg",
+      "caption": "一身浅色内搭，用黑西装收住轮廓",
+      "tags": [
+        "浅色内搭",
+        "宽腿裤"
+      ],
+      "outfits": [
+        "mono"
+      ],
+      "width": 855,
+      "height": 1068,
+      "credit": "@aemiliafay",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1585853419327-main.jpg"
+    },
+    {
+      "name": "暖调知性",
+      "image": "assets/style-warm-skirt.jpg",
+      "caption": "棕色长裙和针织，给黑色一点温度",
+      "tags": [
+        "棕色长裙",
+        "针织披肩"
+      ],
+      "outfits": [
+        "skirt"
+      ],
+      "width": 1440,
+      "height": 1799,
+      "credit": "@thecarolinelin",
+      "sourceUrl": "https://www.whowhatwear.com/fashion/shopping/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/xmhzk3HMbjEREocKFQ2zqU.jpg"
+    },
+    {
+      "name": "彩色混搭",
+      "image": "assets/style-color.jpg",
+      "caption": "黑西装打底，用亮色表达心情",
+      "tags": [
+        "亮色配饰",
+        "大廓形"
+      ],
+      "outfits": [
+        "mono",
+        "skirt"
+      ],
+      "width": 1080,
+      "height": 1350,
+      "credit": "@himichelleli",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146420768-main.jpg"
+    },
+    {
+      "name": "黑白通勤",
+      "image": "assets/style-white-denim.jpg",
+      "caption": "白色牛仔与长靴，清爽也有气场",
+      "tags": [
+        "白色牛仔",
+        "长靴"
+      ],
+      "outfits": [
+        "mono"
+      ],
+      "width": 1080,
+      "height": 1349,
+      "credit": "@nnennaechem",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146516076-main.jpg"
+    },
+    {
+      "name": "收腰精致",
+      "image": "assets/style-black.jpg",
+      "caption": "用收腰线条，把全黑穿得有层次",
+      "tags": [
+        "收腰西装",
+        "全黑"
+      ],
+      "outfits": [
+        "mono"
+      ],
+      "width": 1080,
+      "height": 1254,
+      "credit": "@chrissyford",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146668095-main.jpg"
+    },
+    {
+      "name": "短裙酷感",
+      "image": "assets/style-mini.jpg",
+      "caption": "短裙搭厚底靴，利落里带一点酷",
+      "tags": [
+        "短裙",
+        "厚底靴"
+      ],
+      "outfits": [
+        "skirt"
+      ],
+      "width": 1080,
+      "height": 1336,
+      "credit": "@jaimeridge",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146710826-main.jpg"
+    },
+    {
+      "name": "学院风",
+      "image": "assets/style-preppy.jpg",
+      "caption": "百褶短裙、白袜和乐福鞋的轻快组合",
+      "tags": [
+        "百褶裙",
+        "白袜"
+      ],
+      "outfits": [
+        "skirt"
+      ],
+      "width": 1440,
+      "height": 1800,
+      "credit": "@fakerstrom",
+      "sourceUrl": "https://www.whowhatwear.com/fashion/trends/skirt-shoe-combos-for-fall",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/WfSyMG3JbJP9faD2atprGo.jpg"
+    },
+    {
+      "name": "复古皮革",
+      "image": "assets/style-leather.jpg",
+      "caption": "黑色皮革西装配长靴，更有个性",
+      "tags": [
+        "皮革西装",
+        "长靴"
+      ],
+      "outfits": [
+        "skirt"
+      ],
+      "width": 1440,
+      "height": 1696,
+      "credit": "@camillecharriere",
+      "sourceUrl": "https://www.whowhatwear.com/fashion/trends/skirt-shoe-combos-for-fall",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/fmhUBqbcQ5pdvbicpcAcPj.jpg"
+    },
+    {
+      "name": "轻盈裙装",
+      "image": "assets/style-airy-skirt.jpg",
+      "caption": "挺括黑西装遇见白裙的轻盈",
+      "tags": [
+        "白色泡泡裙",
+        "平底鞋"
+      ],
+      "outfits": [
+        "skirt"
+      ],
+      "width": 1440,
+      "height": 1800,
+      "credit": "@sobalera",
+      "sourceUrl": "https://www.whowhatwear.com/fashion/trends/skirt-shoe-combos-for-fall",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/NSEnbTqHyKySxaRWH9AsaM.jpg"
+    }
+  ],
+  "avoids": [
+    {
+      "name": "太正式",
+      "hint": "衬衫 · 西装裤",
+      "image": "assets/blazer-model.jpg",
+      "credit": "Mango",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1631558857871-main.jpg"
+    },
+    {
+      "name": "显得沉闷",
+      "hint": "深色叠穿 · 低色差",
+      "image": "assets/style-black.jpg",
+      "credit": "@chrissyford",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146668095-main.jpg"
+    },
+    {
+      "name": "过于甜美",
+      "hint": "粉色裙装 · 柔美细节",
+      "image": "assets/avoid-sweet.jpg",
+      "credit": "@emmanuellek_",
+      "sourceUrl": "https://www.whowhatwear.com/french-color-trends",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/279145/french-color-trends-279145-1683166813501-main.jpg"
+    },
+    {
+      "name": "太过张扬",
+      "hint": "亮色撞色 · 醒目配饰",
+      "image": "assets/style-color.jpg",
+      "credit": "@himichelleli",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146420768-main.jpg"
+    },
+    {
+      "name": "不够利落",
+      "hint": "宽松廓形 · 堆叠裤脚",
+      "image": "assets/avoid-slouchy.jpg",
+      "credit": "@emmarosestyle",
+      "sourceUrl": "https://www.whowhatwear.com/uk/chunky-sandal-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/292987/chunky-sandals-outfits-292987-1681553468810-main.jpg"
+    },
+    {
+      "name": "不想露肤",
+      "hint": "短内搭 · 露腰",
+      "image": "assets/outfit-denim.jpg",
+      "credit": "@ada_oguntodu",
+      "sourceUrl": "https://www.whowhatwear.com/black-blazer-outfits",
+      "imageUrl": "https://cdn.mos.cms.futurecdn.net/whowhatwear/posts/267588/black-blazer-outfits-267588-1582146077960-main.jpg"
+    }
+  ]
+}

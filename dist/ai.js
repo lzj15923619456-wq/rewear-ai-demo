@@ -5,7 +5,7 @@ let aiBusy = false;
 let searchGeneration = 0;
 
 async function apiRequest(url, body, method = 'POST') {
-  const response = await fetch(url, { method, credentials: 'same-origin', headers: body === undefined ? {} : {'Content-Type':'application/json'}, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(80000) });
+  const response = await fetch(url, { method, credentials: 'same-origin', headers: body === undefined ? {} : {'Content-Type':'application/json'}, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(200000) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || '请求失败，请稍后重试');
   return result;
@@ -13,7 +13,7 @@ async function apiRequest(url, body, method = 'POST') {
 async function aiTask(title, task) {
   if (aiBusy) return toast('上一项请求还在处理中');
   aiBusy = true;
-  modal(title, '<div class="ai-working" role="status"><span></span><p>正在处理，请稍候…</p><small>可关闭窗口继续查看，完成后会提示。</small></div>');
+  modal(title, '<div class="ai-working" role="status"><span></span><p>正在处理，请稍候…</p><small>检索与看图核对需要一些时间。可关闭窗口继续查看，完成后会提示。</small></div>');
   try { return await task(); }
   catch (error) { modal('暂时没有完成', `<p role="alert">${esc(error.name==='TimeoutError'?'请求超时，请稍后重试':error.message)}</p><button class="btn primary wide" onclick="closeModal()">知道了</button>`); }
   finally { aiBusy = false; }
@@ -115,7 +115,7 @@ moreOutfitCard = count => `<div class="more-outfits-card"><span class="eyebrow">
 const presetDetail=detail;
 detail = id => {
   const o=outfits.find(x=>x.id===id);if(!o?.ai)return presetDetail(id);
-  modal(esc(o.title),`<div class="detail-hero"><img src="${o.image}" alt="真实穿搭参考"><div><h3>${esc(o.subtitle)}</h3><p>${esc(o.reason)}</p><a class="credit" href="${o.sourceUrl}" target="_blank" rel="noopener noreferrer">${esc(o.credit)} · 原始照片与署名 ↗</a>${o.licenseUrl?`<a class="credit" href="${o.licenseUrl}" target="_blank" rel="noopener noreferrer">${esc(o.license)} · 图片来源与许可 ↗</a>`:""}</div></div><div class="notice">${esc(o.difference)}</div><section class="analysis-section"><h3>实际搭配清单</h3>${o.items.map(i=>`<div class="analysis-row"><div><strong>${esc(i.name)}</strong><p>${esc(i.tip)}</p></div></div>`).join('')}</section><section class="analysis-section"><h3>保留搭配关系</h3><p>${esc(o.keep)}</p><h3>这次先避开</h3><p>${esc(o.avoid)}</p></section><section class="analysis-section"><h3>继续问问这套搭配</h3><div class="ask-row"><input id="question-input" maxlength="1000" placeholder="比如：需要走很多路，鞋子怎么选？"><button class="btn secondary" onclick="answerQuestion(document.querySelector('#question-input').value,'${o.id}')">追问</button></div><p id="answer" class="small muted" aria-live="polite"></p><small class="muted">AI 提供搭配建议，合身与鞋履舒适度需实际试穿核对。</small></section><button class="btn primary wide" onclick="closeModal();selectOutfit('${o.id}')">选这套，核对我的衣柜</button>`);
+  modal(esc(o.title),`<div class="detail-hero"><img src="${o.image}" alt="真实穿搭参考"><div><h3>${esc(o.subtitle)}</h3><p>${esc(o.reason)}</p><a class="credit" href="${o.sourceUrl}" target="_blank" rel="noopener noreferrer">${esc(o.credit)} · 原始照片与署名 ↗</a>${o.licenseUrl?`<a class="credit" href="${o.licenseUrl}" target="_blank" rel="noopener noreferrer">${esc(o.license)} · 图片来源与许可 ↗</a>${o.photoChanges?`<small class="credit">${esc(o.photoChanges)}</small>`:""}`:""}</div></div><div class="notice">${esc(o.difference)}</div><section class="analysis-section"><h3>实际搭配清单</h3>${o.items.map(i=>`<div class="analysis-row"><div><strong>${esc(i.name)}</strong><p>${esc(i.tip)}</p></div></div>`).join('')}</section><section class="analysis-section"><h3>保留搭配关系</h3><p>${esc(o.keep)}</p><h3>这次先避开</h3><p>${esc(o.avoid)}</p></section><section class="analysis-section"><h3>继续问问这套搭配</h3><div class="ask-row"><input id="question-input" maxlength="1000" placeholder="比如：需要走很多路，鞋子怎么选？"><button class="btn secondary" onclick="answerQuestion(document.querySelector('#question-input').value,'${o.id}')">追问</button></div><p id="answer" class="small muted" aria-live="polite"></p><small class="muted">AI 提供搭配建议，合身与鞋履舒适度需实际试穿核对。</small></section><button class="btn primary wide" onclick="closeModal();selectOutfit('${o.id}')">选这套，核对我的衣柜</button>`);
 };
 answerQuestion = async (question,id) => {
   if(!question.trim())return;
