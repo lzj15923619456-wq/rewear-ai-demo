@@ -10,6 +10,8 @@
 
 Coze两组基础地址/Token只放生产环境变量，Coze的REWEAR_API_TOKEN与之匹配。Openverse默认开启，不需新密钥。不要将.env、storage、.runtime、node_modules、日志或上传照片提交到GitHub或ZIP。
 
+2026-10-09：原版布局与联网检索代码（2be54d3）已在现有服务部署。Coze 的5个 action 已部署，但公开上传复测出现 invalid_model_output，随后平台因积分耗尽停服。当前只能交付可浏览的网页与源码，不能把 AI 线上验收标为完成。恢复 Coze 积分、验证待部署 JSON 修复后，再按下述流程验收；详细证据见 [验收记录](AI-ACCEPTANCE.md)。
+
 ## 更新步骤
 
 先部署兼容5个action的Coze工作流并验证，再把源码追加提交至GitHub main。现有服务由公开GitURL创建，推送不一定自动部署：Render选择 Manual Deploy → Deploy latest commit。确认部署SHA对应本次提交；保留旧Git提交以便回退。部署后核对 /api/status、原版界面照片和真实非黑西装推荐，测试不足数量提示、作者/许可、追问、修改及保存。

@@ -26,6 +26,8 @@ API 是程序约定的请求和返回格式。网页用同源 JSON 调用 /api�
 
 Openverse 无需新增 API Key。Pexels 申请页当前暂停发放新密钥，本版本不依赖 PEXELS_API_KEY。可设置 PHOTO_SEARCH_ENABLED=0 关闭检索用于回归；默认开启。
 
+2026-10-09 的现有项目因 Coze 积分用尽停服，先恢复账户额度，再检查已部署服务是否恢复。本机配置存在、/api/status 的 Ready 或 Render 网页可打开，均不能替代真实 AI 调用验收。当前模型偶发无效 JSON；原生 JSON 模式修复候选尚未完成网关验证，不属于这里的正式工作流。
+
 ## 搜索链路
 
 用主单品（上衣优先，否则第一件）的类别、颜色及风格标签形成两个查询。结果按许可、来源、标题风险过滤；只从固定 Openverse /thumb/ 接口取缩图，限制大小与像素，清除 EXIF，以照片 ID 和感知哈希去重。元数据缓存24小时，缩图缓存于 DATA_DIR/reference-images。
