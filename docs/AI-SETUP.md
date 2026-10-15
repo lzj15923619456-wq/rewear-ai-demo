@@ -1,5 +1,7 @@
 # AI 接入逻辑与配置
 
+> 以下为旧 Coze 版本说明。2026-10-10 默认直接调用模型，新版配置和接口见 [MULTI-AGENT.md](MULTI-AGENT.md) 与根目录 README。
+
 ## 接口为什么这样分工
 
 API 是程序约定的请求和返回格式。网页用同源 JSON 调用 /api；浏览器不接触 Coze Token。Node 验证会话、图片、衣物与选择，再用私密 Bearer 请求 Coze /run。Coze 接收 {payload:{...}}，返回 {result:{...}}；Node 再验证来源 ID、锁定衣物、版本和所有权，才保存并交给页面。

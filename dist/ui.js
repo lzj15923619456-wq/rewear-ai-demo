@@ -128,7 +128,7 @@ function intake(){
   <div id="intake-progress-root" class="intake-progress" aria-label="录入进度"></div>
   ${step===0?profilePicker():''}
   <div class="intro-row"><h1 tabindex="-1">${titles[step]}</h1><p>${subtitles[step]}</p></div>
-  ${step===0?`<p class="item-count" role="status">已录入 ${count} / 3 件<span>至少 1 件，每类最多 1 件</span></p><div class="piece-stack">${itemSlots.map(piecePanel).join('')}</div><p class="privacy-note">${icon('shield')} 确认后将衣物照片发送给 Coze 识别 · 每张最大 8 MB</p>`:`<p class="selected-summary">本次单品 · ${esc(inputSummary())}</p>`}
+  ${step===0?`<p class="item-count" role="status">已录入 ${count} / 3 件<span>至少 1 件，每类最多 1 件</span></p><div class="piece-stack">${itemSlots.map(piecePanel).join('')}</div><p class="privacy-note">${icon('shield')} 照片仅经确认后发给识别服务 · 规则模式需手动确认属性 · 每张最大 8 MB</p>`:`<p class="selected-summary">本次单品 · ${esc(inputSummary())}</p>`}
   ${step===1?preferencePicker():''}
   ${step===2?`<div class="preference-summary"><p>场景 · ${esc(sceneSummary())}</p><p>风格 · ${state.styles.map(esc).join('、')}</p></div>`:''}
   ${step===2?comfortPreferences():''}

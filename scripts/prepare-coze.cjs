@@ -1,0 +1,14 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname,'..');
+const source=path.join(root,'coze/analyze/projects'), target=path.join(root,'coze/runtime/projects');
+fs.cpSync(source,target,{recursive:true});
+fs.copyFileSync(path.join(root,'coze/graph.py'),path.join(target,'src/graphs/graph.py'));
+for (const file of ['auth_guard.py','output_guard.py']) fs.copyFileSync(path.join(root,'coze',file),path.join(target,'src',file));
+const main=path.join(target,'src/main.py');
+let code=fs.readFileSync(main,'utf8');
+code=code.replace('app = FastAPI(lifespan=lifespan)', 'from auth_guard import WorkflowAuth\napp = FastAPI(lifespan=lifespan)\napp.add_middleware(WorkflowAuth)');
+code=code.replace(/f"body=\{body_text\}"/g, '"body=[redacted]"').replace(/f"query=\{dict\(request.query_params\)\}, "/g,'"query=[redacted], "');
+fs.writeFileSync(main,code);
+fs.writeFileSync(path.join(target,'AGENTS.md'),'# REWEAR Coze runtime\nGraphInput.payload supports analyze/recommend/revise/answer. One model call per request. No image generation. Backend validates IDs and ownership. Never log images, credentials or request bodies. Do not run code generation or auto-deploy without explicit user instruction.\n');
+console.log('Coze runtime prepared; HTTP request bodies redacted.');

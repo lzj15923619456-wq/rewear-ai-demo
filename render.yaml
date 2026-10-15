@@ -1,27 +1,53 @@
-# Temporary demo: the free instance loses uploads and SQLite data on restart.
+# Free demo: uploads, SQLite data and search cache in /tmp are lost on restart.
 services:
   - type: web
     name: rewear-ai-demo
     runtime: node
     plan: free
     buildCommand: npx --yes pnpm@11.25.0 install --prod --frozen-lockfile
-    startCommand: PUBLIC_ORIGIN=$RENDER_EXTERNAL_URL node server.cjs
+    startCommand: node server.cjs
     healthCheckPath: /__rewear_health
     envVars:
       - key: NODE_VERSION
         value: 24.19.0
       - key: HOST
         value: 0.0.0.0
-      - key: COZE_ANALYZE_BASE_URL
-        sync: false
-      - key: COZE_ANALYZE_TOKEN
-        sync: false
-      - key: COZE_STYLIST_BASE_URL
-        sync: false
-      - key: COZE_STYLIST_TOKEN
-        sync: false
+      - key: PUBLIC_ORIGIN
+        value: https://rewear-ai-demo.onrender.com
       - key: DATA_DIR
         value: /tmp/rewear-demo
+      - key: REWEAR_AI_PROVIDER
+        value: direct
+      - key: REWEAR_LLM_BASE_URL
+        value: https://api.deepseek.com
+      - key: REWEAR_LLM_API_KEY
+        sync: false
+      - key: REWEAR_MODEL_MAIN
+        value: deepseek-flash
+      - key: REWEAR_MODEL_ITEM
+        value: qwen3.5-plus-2026-02-15
+      - key: REWEAR_MODEL_REFERENCE
+        value: kimi-k2.6
+      - key: REWEAR_MODEL_STYLIST
+        value: qwen3.5-plus-2026-02-15
+      - key: REWEAR_MODEL_WARDROBE
+        value: deepseek-flash
+      - key: REWEAR_MODEL_REVIEW
+        value: deepseek-flash
+      - key: REWEAR_LLM_ITEM_BASE_URL
+        sync: false
+      - key: REWEAR_LLM_ITEM_API_KEY
+        sync: false
+      - key: REWEAR_LLM_REFERENCE_BASE_URL
+        value: https://api.moonshot.cn/v1
+      - key: REWEAR_LLM_REFERENCE_API_KEY
+        sync: false
+      - key: REWEAR_LLM_STYLIST_BASE_URL
+        sync: false
+      - key: REWEAR_LLM_STYLIST_API_KEY
+        sync: false
+      - key: PHOTO_SEARCH_ENABLED
+        value: 1
       - key: AI_USER_DAILY_LIMIT
         value: 12
       - key: AI_GLOBAL_DAILY_LIMIT

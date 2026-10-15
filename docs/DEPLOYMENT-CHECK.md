@@ -23,7 +23,7 @@
 
 新增五组标准库测试通过，覆盖所有执行路径保护、缺失环境变量、重复鉴权头、不合法模型 JSON 和受控错误；三组 Node 回归也通过。2026-10-09 用户确认该补丁已应用、环境变量已配置并重新部署。
 
-远端修复后先运行 node scripts/verify-coze.cjs，成功再运行 node scripts/test-live-ai.cjs --run --image "本机清晰单品照片路径"。第二条会实际调用模型且使用独立临时数据库，最多一轮，不自动重试。测试报告保存在被忽略的 .runtime 目录。
+远端修复后先运行 node scripts/verify-coze.cjs，成功再运行 node scripts/test-live-ai.cjs --run。第二条会实际调用模型且使用独立临时数据库，最多一轮，不自动重试。测试报告保存在被忽略的 .runtime 目录。
 
 ## 修复后的部署结果
 

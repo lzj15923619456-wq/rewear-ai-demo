@@ -14,17 +14,17 @@ test('non-blazer HTTP flow searches and inspects photos, serves cached images, r
   const photoId='324709e5-375e-435a-bfab-e190fa111c6a';
   const photoBytes=await sharp({create:{width:300,height:450,channels:3,background:'#888'}}).jpeg().toBuffer();
   const actions=[];
-  const api=createApi({dataDir:directory,references:[],config:{COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(url,options)=>{
+  const api=createApi({dataDir:directory,references:[],config:{REWEAR_AI_PROVIDER:'coze',COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(url,options)=>{
     const u=new URL(url);
     if(u.hostname==='api.openverse.org'){
       if(u.pathname.endsWith('/thumb/'))return new Response(photoBytes);
       assert.match(u.searchParams.get('q'),/hoodie/);
-      return Response.json({results:[{id:photoId,title:'Grey hoodie',creator:'Fixture author',foreign_landing_url:'https://example.org/photo',license:'by-sa',license_version:'2.0',license_url:'https://creativecommons.org/licenses/by-sa/2.0/',width:300,height:450}]});
+      return Response.json({results:[{id:photoId,source:'stocksnap',tags:[{name:'fashion'}],title:'Grey hoodie',creator:'Fixture author',foreign_landing_url:'https://example.org/photo',license:'by-sa',license_version:'2.0',license_url:'https://creativecommons.org/licenses/by-sa/2.0/',width:300,height:450}]});
     }
     const p=JSON.parse(options.body).payload;actions.push(p.action);
     if(p.action==='inspect_references'){
       assert.equal(p.imageCandidates.length,1);assert.match(p.imageCandidates[0].imageUrl,/^data:image\/jpeg;base64,/);
-      return Response.json({result:{status:'completed',references:[{referenceId:p.imageCandidates[0].referenceId,usable:true,matchedItemIds:[p.lockedItems[0].itemId],description:'灰卫衣搭配牛仔裤，鞋未展示',styles:['简约日常'],scenes:['日常通勤'],effects:[],exploration:50}]}});
+      return Response.json({result:{status:'completed',references:[{referenceId:p.imageCandidates[0].referenceId,usable:true,matchedItemIds:[p.lockedItems[0].itemId],visibleSlots:['upper','bottom'],referenceQuality:'fashion',styleEvidence:'灰白配色与宽松廓形，上衣裤装完整，背景干净',description:'灰卫衣搭配牛仔裤，鞋未展示',styles:['简约日常'],scenes:['日常通勤'],effects:[],exploration:50}]}});
     }
     const id=p.action==='revise'?p.originalOutfit.referenceId:p.referenceCandidates[0].referenceId;
     return Response.json({result:{status:'completed',outfits:[{referenceId:id,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'灰色卫衣搭配',reason:'通勤使用舒适鞋履',items:[{id:'bottom',name:'蓝色牛仔裤'},{id:'shoes',name:'运动鞋'}]}]}});
@@ -68,7 +68,7 @@ test('trust boundaries reject invalid profile, image, invented photo and dropped
 test('HTTP flow isolates visitors, preserves kept items, rejects stale revisions and persists plan snapshots',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'rewear-test-'));
   let calls=0;
-  const api=createApi({dataDir:directory,references:[reference],config:{PHOTO_SEARCH_ENABLED:'0',COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(_,options)=>{
+  const api=createApi({dataDir:directory,references:[reference],config:{REWEAR_AI_PROVIDER:'coze',PHOTO_SEARCH_ENABLED:'0',COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(_,options)=>{
     calls++;
     const p=JSON.parse(options.body).payload;
     if(p.question==='触发无效结构测试')return new Response(JSON.stringify({result:{status:'error',warnings:['invalid_model_output'],outfits:[]}}));

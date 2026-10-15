@@ -2,6 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 try { process.loadEnvFile(path.join(__dirname, '.env')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+try { process.loadEnvFile(path.join(__dirname, '.env.local')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 const { createApi } = require('./api.cjs');
 const api = createApi();
 const root = path.join(__dirname, 'dist');

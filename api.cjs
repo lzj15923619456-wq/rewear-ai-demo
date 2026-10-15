@@ -4,6 +4,8 @@ const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const sharp = require('sharp');
 const { createPhotoSearch, analyzedReferences } = require('./photo-search.cjs');
+const { createAgents } = require('./agents/orchestrator.cjs');
+const { ruleResult } = require('./agents/rules.cjs');
 
 const slots = ['upper', 'bottom', 'shoes'];
 const text = (value, max = 1000) => typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -29,7 +31,7 @@ function normalizeRequirements(input) {
   requireValue(scenes.length && styles.length, '至少选择一个场景和一种风格');
   return {
     profile: { gender, age, heightCm: optionalNumber(p['身高（cm）'], 80, 230), weightKg: optionalNumber(p['体重（kg）'], 20, 250), bodyType: text(p['体型'], 40) || null },
-    requirements: { scenes, styles, avoid: list(input.avoids, 6), exploration, styleReference: text(p['风格参考'], 80) || null, note: text(input.note) }
+    requirements: { scenes, styles, avoid: list(input.avoids, 6), exploration, styleReference: text(p['风格参考'], 80) || null, note: text(input.note), budget: optionalNumber(input.budget, 0, 10000) }
   };
 }
 function scoreReference(reference, requirements) {
@@ -90,11 +92,23 @@ function createApi(options = {}) {
   const busy = new Set();
   const read = id => JSON.parse(db.prepare('SELECT data FROM users WHERE id=?').get(id)?.data || '{"items":[],"outfits":[],"plans":[]}');
   const write = (id, data) => db.prepare('INSERT INTO users VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').run(id, JSON.stringify(data));
-  const ready = kind => Boolean(config[`COZE_${kind}_BASE_URL`] && config[`COZE_${kind}_TOKEN`]);
   const fetcher = options.fetch || fetch;
+  const agents = createAgents(config, fetcher);
+  const legacy = config.REWEAR_AI_PROVIDER === 'coze';
+  const ready = kind => legacy ? Boolean(config[`COZE_${kind}_BASE_URL`] && config[`COZE_${kind}_TOKEN`]) : kind==='ANALYZE'?agents.readyFor('item'):agents.ready;
   const photoSearch = createPhotoSearch({ db, dataDir, fetcher });
   const searchEnabled = config.PHOTO_SEARCH_ENABLED !== '0';
-  async function run(kind, payload) {
+  async function run(kind, payload, context = {}) {
+    if (!legacy) {
+      try { return await agents.run(payload.payload, context); }
+      catch (error) {
+        if (context.signal?.aborted) throw error;
+        const agent = payload.payload.action === 'analyze' ? 'item' : payload.payload.action === 'inspect_references' ? 'reference' : ['answer','revise'].includes(payload.payload.action) ? 'wardrobe' : 'stylist';
+        context.emit?.({agent, type:'log', data:{mode:'rules',message:error.message+'；切换规则模式'}});
+        const fallback = ruleResult(payload.payload);
+        return {...fallback,warnings:[error.message,...fallback.warnings]};
+      }
+    }
     if (!ready(kind)) throw fail(503, 'Coze 工作流尚未配置完成，请稍后重试');
     const base = new URL(config[`COZE_${kind}_BASE_URL`]);
     if (base.protocol !== 'https:' && !options.allowHttp) throw fail(503, '工作流地址必须使用 HTTPS');
@@ -127,7 +141,14 @@ function createApi(options = {}) {
       db.exec('COMMIT');
     } catch (error) { db.exec('ROLLBACK'); throw error; }
   }
-  const send = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(body)); };
+  const send = (res, status, body) => {
+    if (res.destroyed) return;
+    if (res.agentStream) {
+      if (!res.headersSent) res.writeHead(status, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff' });
+      return res.end(JSON.stringify({agent:'main',type:status>=400?'error':'done',data:status>=400?{message:body.error,final:true}:{result:body}})+'\n');
+    }
+    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(body));
+  };
   async function body(req) {
     requireValue((req.headers['content-type'] || '').startsWith('application/json'), '请求必须使用 JSON');
     let raw = '', size = 0;
@@ -147,11 +168,22 @@ function createApi(options = {}) {
         res.setHeader('Set-Cookie', `rewear_session=${user}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${expectedOrigin.startsWith('https:') ? '; Secure' : ''}`);
       }
       const data = read(user);
+      const controller = new AbortController();
+      res.on('close', () => { if (!res.writableEnded) controller.abort(); });
+      const emit = event => {
+        if (!res.agentStream || res.destroyed) return;
+        if (!res.headersSent) res.writeHead(200, { 'Content-Type':'application/x-ndjson; charset=utf-8', 'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff' });
+        res.write(JSON.stringify(event)+'\n');
+      };
+      const context = { emit, signal:controller.signal };
+      if (pathname === '/api/agent/status' && req.method === 'GET') {
+        send(res,200,{ready:ready('ANALYZE')&&ready('STYLIST'),mode:legacy?'coze':agents.ready?'ai':'rules',agents:agents.names,configuredAgents:legacy?undefined:agents.configured,identity:'anonymous-session',timeoutSeconds:30});return true;
+      }
       if (pathname === '/api/status' && req.method === 'GET') {
-        send(res, 200, { analyzeReady: ready('ANALYZE'), stylistReady: ready('STYLIST'), referenceCount: references.length, imageSearch: searchEnabled ? 'openverse' : 'disabled', mode: 'coze', identity: 'anonymous-session', uploadProcessing: 'coze', storage: 'sqlite' }); return true;
+        send(res, 200, { analyzeReady: ready('ANALYZE'), stylistReady: ready('STYLIST'), referenceCount: references.length, imageSearch: searchEnabled ? 'openverse' : 'disabled', mode:legacy?'coze':agents.ready?'ai':'rules', identity: 'anonymous-session', uploadProcessing:legacy?'coze':ready('ANALYZE')?'vision':'manual', storage: 'sqlite' }); return true;
       }
       if (pathname === '/api/records' && req.method === 'GET') {
-        send(res, 200, { plans: data.plans, items: data.items.map(({ imageData, ...item }) => item), outfits: data.outfits }); return true;
+        send(res, 200, { plans: data.plans, items: data.items.map(({ imageData, ...item }) => item), outfits: data.outfits, preferences:data.preferences||[] }); return true;
       }
       const referenceImage = /^\/api\/reference-images\/([a-f0-9-]+)\.jpg$/.exec(pathname);
       if (referenceImage && req.method === 'GET') {
@@ -168,10 +200,21 @@ function createApi(options = {}) {
       }
       if (req.method === 'GET') throw fail(404, '接口不存在');
       const input = await body(req);
+      if (pathname === '/api/agent/run' && req.method === 'POST') { pathname='/api/recommendations';res.agentStream=true; }
+      if (pathname === '/api/agent/task' && req.method === 'POST') {
+        requireValue(['answer','revise','replacement','review'].includes(input.task),'Agent 任务类型无效');
+        const id = input.task==='review'?input.planId:input.outfitId;
+        requireValue(typeof id==='string' && /^[a-zA-Z0-9-]{1,100}$/.test(id),'任务记录 ID 无效');
+        pathname=input.task==='review'?`/api/plans/${id}/feedback`:`/api/outfits/${id}/${input.task==='answer'?'questions':'revisions'}`;
+      }
+      if (pathname === '/api/agent/memory' && req.method === 'POST') {
+        requireValue(Array.isArray(input.preferences)&&input.preferences.length<=5&&input.preferences.every(v=>typeof v==='string'&&v.length<=200),'偏好格式无效');
+        const latest=read(user);latest.preferences=input.preferences.map(v=>v.trim()).filter(Boolean);write(user,latest);send(res,200,{preferences:latest.preferences});return true;
+      }
       if (pathname === '/api/items' && req.method === 'POST') {
         if (busy.has(user)) throw fail(409, '上一项 AI 任务还在处理中');
         requireValue(slots.includes(input.slot), '衣物类别无效');
-        if (!ready('ANALYZE') && !input.sample) throw fail(503, '识别工作流尚未配置');
+        if (legacy && !ready('ANALYZE') && !input.sample) throw fail(503, '识别工作流尚未配置');
         if (data.items.length >= 60) throw fail(409, '衣柜已达到本次 Demo 的保存上限');
         const image = input.sample ? await sharp(path.join(__dirname, 'dist/assets/blazer-product-white.png')).resize({ width: 1000, withoutEnlargement: true }).jpeg().toBuffer() : await decodeImage(input.imageData);
         requireValue(!input.sample || input.slot === 'upper', '示例仅支持上衣');
@@ -180,11 +223,11 @@ function createApi(options = {}) {
         if (input.sample) result = { status: 'needs_confirmation', suggestedName: '黑色宽松西装', attributes: { slot: 'upper', subtype: 'blazer', layer: 'outer', colors: ['black'], fit: 'relaxed', material: null }, uncertainFields: ['material'], warnings: ['示例衣物属性由人工标注'] };
         else {
           busy.add(user);
-          try { quota(user, req.socket.remoteAddress); result = await run('ANALYZE', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action:'analyze', itemId, slot: input.slot, imageUrl: 'data:image/jpeg;base64,' + image.toString('base64'), userLabel: text(input.name, 80) } }); }
+          try { if(ready('ANALYZE'))quota(user, req.socket.remoteAddress); result = await run('ANALYZE', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action:'analyze', itemId, slot: input.slot, imageUrl: 'data:image/jpeg;base64,' + image.toString('base64'), userLabel: text(input.name, 80) } },context); }
           finally { busy.delete(user); }
         }
         if (result.status !== 'needs_confirmation' || !result.attributes || !slots.includes(result.attributes.slot)) throw fail(422, '无法可靠识别这张衣物图片，请换一张清晰单品照片');
-        const item = { itemId, slot: input.slot, name: text(result.suggestedName, 80) || text(input.name, 80) || '我的衣物', attributes: { slot: result.attributes.slot, subtype: text(result.attributes.subtype, 60) || null, layer: text(result.attributes.layer, 30) || null, colors: list(result.attributes.colors, 5), fit: text(result.attributes.fit, 50) || null, material: text(result.attributes.material, 80) || null }, uncertainFields: list(result.uncertainFields), warnings: list(result.warnings), confirmed: false, imageData: image.toString('base64'), image: `/api/items/${itemId}/image`, sample: Boolean(input.sample) };
+        const item = { itemId, slot: input.slot, mode:input.sample?'rules':result.mode||'ai', name: text(result.suggestedName, 80) || text(input.name, 80) || '我的衣物', attributes: { slot: result.attributes.slot, subtype: text(result.attributes.subtype, 60) || null, layer: text(result.attributes.layer, 30) || null, colors: list(result.attributes.colors, 5), fit: text(result.attributes.fit, 50) || null, material: text(result.attributes.material, 80) || null, formality:text(result.attributes.formality,30)||null }, uncertainFields: list(result.uncertainFields), warnings: list(result.warnings), confirmed: false, imageData: image.toString('base64'), image: `/api/items/${itemId}/image`, sample: Boolean(input.sample) };
         const latest = read(user); latest.items.push(item); write(user, latest);
         const { imageData, ...publicItem } = item; send(res, 201, publicItem); return true;
       }
@@ -202,7 +245,7 @@ function createApi(options = {}) {
         const { imageData, ...publicItem } = item; send(res, 200, publicItem); return true;
       }
       if (pathname === '/api/recommendations' && req.method === 'POST') {
-        if (!ready('STYLIST')) throw fail(503, '规划工作流尚未配置');
+        if (legacy && !ready('STYLIST')) throw fail(503, '规划工作流尚未配置');
         if (busy.has(user)) throw fail(409, '上一项 AI 任务还在处理中');
         const request = normalizeRequirements(input.requirements);
         const itemIds = list(input.itemIds, 4);
@@ -213,36 +256,61 @@ function createApi(options = {}) {
         let candidates = references.filter(ref => !exclude.includes(ref.id) && !(request.requirements.avoid.includes('不想露肤') && ref.effects.includes('不想露肤')));
         // shortcut: curated fallback covers women's black blazers; web search handles other garments.
         const upper = lockedItems.find(i => i.slot === 'upper');
-        if (request.profile.gender !== '女性' || upper && (!/blazer|西装|西服/.test(upper.attributes.subtype || '') || !upper.attributes.colors.some(c => ['black', '黑色', '黑'].includes(c)))) candidates = [];
+        if (request.profile.gender !== '女性' || !upper || !/blazer|西装|西服/.test(upper.attributes.subtype || '') || !upper.attributes.colors.some(c => ['black', '黑色', '黑'].includes(c))) candidates = [];
         candidates.sort((a, b) => scoreReference(b, request.requirements).percent - scoreReference(a, request.requirements).percent);
         candidates = candidates.slice(0, 24);
         busy.add(user);
         try {
-          quota(user, req.socket.remoteAddress);
-          const snapshot = { ...request, lockedItems: lockedItems.map(i => ({ itemId: i.itemId, slot: i.slot, name: i.name, ...i.attributes })) };
+          if(legacy?ready('STYLIST'):agents.readyFor('main')||agents.readyFor('stylist'))quota(user, req.socket.remoteAddress);
+          const snapshot = { ...request, preferences:list(data.preferences,5), lockedItems: lockedItems.map(i => ({ itemId: i.itemId, slot: i.slot, name: i.name, ...i.attributes })) };
           const warnings = [];
-          if (searchEnabled) {
+          let main = {summary:'按已确认需求分派任务',mode:legacy?'coze':'rules'};
+          if(!legacy) {
+            try { main=await agents.prepare(snapshot,context); }
+            catch(error) { if(controller.signal.aborted)throw error;main={summary:'主理人暂不可用，按原始选择进行规则排序。',mode:'rules'};warnings.push(error.message);emit({agent:'main',type:'log',data:{mode:'rules',message:main.summary}}); }
+            if(main.status==='needs_confirmation') { send(res,200,{status:main.status,outfits:[],questions:main.questions,warnings,summary:main.summary,mode:main.mode});return true; }
+          }
+          emit({agent:'item',type:'done',data:{mode:'rules',message:'读取 '+lockedItems.length+' 件已确认衣物，不重复识图'}});
+          if (searchEnabled && (legacy ? ready('STYLIST') : agents.readyFor('reference')) && main.mode!=='rules') {
+            emit({agent:'stylist',type:'log',data:{message:'调用图片检索工具，随后分批核对真实照片'}});
             let photos;
             try { photos = await photoSearch.search(lockedItems, request.requirements, exclude); }
             catch (error) { photos = []; warnings.push(error.status ? error.message : '图片检索连接暂时失败'); }
             if (photos.length) {
-              const inspection = await run('STYLIST', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'inspect_references', ...snapshot, imageCandidates: photos.map(({id,imageData}) => ({referenceId:id,imageUrl:imageData})) } });
-              const checked = analyzedReferences(inspection, photos, lockedItems);
+              const checked = [];
+              let inspected = 0;
+              // Two compact sequential calls avoid one large response and low-tier RPM/concurrency limits.
+              for (let start = 0; start < photos.length; start += 6) {
+                  const batch = photos.slice(start, start + 6);
+                  const inspection = await run('STYLIST', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'inspect_references', lockedItems:snapshot.lockedItems, requirements:{styles:request.requirements.styles,scenes:request.requirements.scenes,exploration:request.requirements.exploration}, imageCandidates: batch.map(({id,imageData}) => ({referenceId:id,imageUrl:imageData})) } },context);
+                  if (inspection.mode === 'rules') { warnings.push(...list(inspection.warnings)); continue; }
+                  const valid = analyzedReferences(inspection, batch, lockedItems, request.requirements).filter(ref=>!(request.requirements.avoid.includes('不想露肤')&&ref.effects.includes('不想露肤')));
+                  inspected += batch.length;
+                  checked.push(...valid);
+                  emit({agent:'reference',type:'log',data:{mode:'ai',message:`已核对 ${inspected}/${photos.length} 张网络图片，符合单品要求及穿搭参考质量 ${checked.length} 张`}});
+              }
+              checked.sort((a,b)=>photos.findIndex(p=>p.id===a.id)-photos.findIndex(p=>p.id===b.id));
               if (checked.length) candidates = checked;
-              warnings.push(`已在线检索并看图核对，本轮通过 ${checked.length} 张参考；图片与已有衣物仍可能存在差异。`);
+              warnings.push(inspected ? `已在线检索并看图核对 ${inspected} 张图片，本轮通过 ${checked.length} 张有搭配参考价值的照片；图片与已有衣物仍可能存在差异。` : '本轮网络图片核对未完成，未使用网络候选。');
             } else warnings.push('本次在线检索未取得可用图片；仅在已有参考确实适用时提供方案。');
           }
-          if (!candidates.length) { send(res, 200, { status: 'insufficient_references', outfits: [], warnings: [...warnings, '未找到适合这些单品的参考图片，请调整条件或稍后再试。'] }); return true; }
+          if (!candidates.length) { send(res, 200, { status: 'insufficient_references', outfits: [], mode:main.mode, summary:main.summary, warnings: [...warnings, '未找到同时满足单品匹配和穿搭参考质量的图片，不会用普通随拍凑数；请调整条件或稍后再试。'] }); return true; }
           const count = Math.min(6, candidates.length);
-          const payload = { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'recommend', ...snapshot, referenceCandidates: candidates.map(({ id, styles, scenes, exploration, effects, description }) => ({ referenceId: id, styles, scenes, exploration, effects, description })), count };
-          const result = await run('STYLIST', { payload });
+          const payload = { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'recommend', ...snapshot, constraints:main.constraints||[], referenceCandidates: candidates.map(ref => ({ referenceId:ref.id,styles:ref.styles,scenes:ref.scenes,exploration:ref.exploration,effects:ref.effects,description:ref.description,styleEvidence:ref.styleEvidence,garments:ref.garments,baseline:scoreReference(ref,request.requirements) })), count };
+          const result = main.mode==='rules'?ruleResult(payload):await run('STYLIST', { payload },context);
+          if(result.mode==='rules')emit({agent:'stylist',type:'done',data:{mode:'rules',message:'按标签基线排序适用参考，未调用智能规划'}});
           const rows = validateOutfits(result, candidates, lockedItems, count);
-          const generated = rows.map(row => ({ id: crypto.randomUUID(), referenceId: row.reference.id, ai: true, version: 1, tag: 'REWEAR / AI', title: row.title, subtitle: row.subtitle, style: row.style, reason: row.reason, difference: row.difference || '真实参考照片未换成你的衣物，请以保留单品和搭配清单为准。', keep: row.keep, avoid: row.avoid, items: row.items, image: row.reference.image, sourceUrl: row.reference.sourceUrl, credit: row.reference.credit, license: row.reference.license, licenseUrl: row.reference.licenseUrl, photoChanges: row.reference.changes, match: scoreReference(row.reference, request.requirements), requirementsSnapshot: snapshot, lockedItemIds: itemIds, inputItems: lockedItems.map(({ imageData, ...i }) => i) }));
+          if(!legacy&&result.mode!=='rules'&&rows.length) {
+            try { const final=await agents.summarize({...snapshot,outfits:rows.map(({title,reason,difference,items})=>({title,reason,difference,items}))},context);main.summary=final.summary; }
+            catch(error) { if(controller.signal.aborted)throw error;warnings.push('方案已校验，但主理人总结未完成。'); }
+          }
+          const generated = rows.map(row => ({ id: crypto.randomUUID(), referenceId: row.reference.id, ai: result.mode!=='rules', managed:true, mode:result.mode||'ai', agent:'stylist', agentSummary:main.summary, version: 1, tag: result.mode==='rules'?'REWEAR / RULES':'REWEAR / AGENT', title: row.title, subtitle: row.subtitle, style: row.style, reason: row.reason, difference: row.difference || '真实参考照片未换成你的衣物，请以保留单品和搭配清单为准。', keep: row.keep, avoid: row.avoid, items: row.items, image: row.reference.image, sourceUrl: row.reference.sourceUrl, credit: row.reference.credit, license: row.reference.license, licenseUrl: row.reference.licenseUrl, photoChanges: row.reference.changes, match: scoreReference(row.reference, request.requirements), requirementsSnapshot: snapshot, lockedItemIds: itemIds, inputItems: lockedItems.map(({ imageData, ...i }) => i) }));
+          if(controller.signal.aborted)throw fail(499,'任务已停止');
           const latest = read(user); latest.outfits.push(...generated); latest.outfits = latest.outfits.slice(-120); write(user, latest);
           const status = (!result.status || result.status === 'completed') && generated.length < 6 ? 'insufficient_references' : result.status || 'completed';
           warnings.push(...list(result.warnings));
           if (generated.length > 0 && generated.length < 6) warnings.push(`当前条件下本轮提供 ${generated.length} 套真实参考方案，不足六套时不会重复凑数。`);
-          send(res, 200, { status, outfits: generated, questions: list(result.questions), warnings, requirementsSnapshot: snapshot });
+          send(res, 200, { status, outfits: generated, questions: list(result.questions), warnings, requirementsSnapshot: snapshot, summary:main.summary, mode:result.mode||'ai' });
         } finally { busy.delete(user); }
         return true;
       }
@@ -266,11 +334,17 @@ function createApi(options = {}) {
         }
         busy.add(user);
         try {
-          quota(user, req.socket.remoteAddress);
+          if(legacy?ready('STYLIST'):agents.readyFor('wardrobe'))quota(user, req.socket.remoteAddress);
           const payload = { schemaVersion: 1, requestId: crypto.randomUUID(), action, ...outfit.requirementsSnapshot, originalOutfit: outfit, question: action === 'answer' ? message : null, revision: action === 'revise' ? { note: message, keepIds: keep, replacement: replacement ? { itemId: replacement.itemId, slot: replacement.slot, name: replacement.name, attributes: replacement.attributes } : null } : null };
-          const result = await run('STYLIST', { payload });
-          if (action === 'answer') { requireValue(text(result.answer, 3000), 'AI 未返回回答'); send(res, 200, { answer: text(result.answer, 3000) }); }
+          const result = await run('STYLIST', { payload },context);
+          if (action === 'answer') { requireValue(text(result.answer, 3000), 'AI 未返回回答'); send(res, 200, { answer: text(result.answer, 3000),mode:result.mode||'ai' }); }
           else {
+            if (['needs_confirmation','insufficient_references'].includes(result.status)) {
+              const questions = list(result.questions, 5).map(q=>text(q,500)).filter(Boolean);
+              requireValue(result.status !== 'needs_confirmation' || questions.length, '需要确认时必须返回具体追问');
+              send(res, 200, { status:result.status, questions, warnings:list(result.warnings), outfits:[], originalOutfit:outfit, changed:false, mode:result.mode||'ai' });
+              return true;
+            }
             const candidate = [{ id: outfit.referenceId, image: outfit.image, sourceUrl: outfit.sourceUrl, credit: outfit.credit, license: outfit.license, licenseUrl: outfit.licenseUrl, styles: [outfit.style] }];
             const lockedItems = outfit.requirementsSnapshot.lockedItems;
             const rows = validateOutfits(result, candidate, lockedItems, 1);
@@ -286,10 +360,11 @@ function createApi(options = {}) {
               requireValue(target, '替换位置不存在');
               target.name = replacement.name; target.itemId = replacement.itemId;
             }
-            const updated = { ...outfit, ...Object.fromEntries(['title','subtitle','style','reason','difference','keep','avoid','items'].map(k => [k,next[k]])), version: outfit.version + 1 };
+            const updated = { ...outfit, ...Object.fromEntries(['title','subtitle','style','reason','difference','keep','avoid','items'].map(k => [k,next[k]])), ai:result.mode!=='rules',managed:true,mode:result.mode||'ai',agent:'wardrobe',version: outfit.version + 1 };
+            if(controller.signal.aborted)throw fail(499,'任务已停止');
             const latest = read(user), index = latest.outfits.findIndex(o => o.id === outfit.id);
             if (latest.outfits[index]?.version !== input.version) throw fail(409, '方案已更新，请重新打开');
-            latest.outfits[index] = updated; write(user, latest); send(res, 200, { outfit: updated });
+            latest.outfits[index] = updated; write(user, latest); send(res, 200, { outfit: updated,mode:result.mode||'ai',warnings:list(result.warnings) });
           }
         } finally { busy.delete(user); }
         return true;
@@ -300,15 +375,26 @@ function createApi(options = {}) {
         const owned = input.owned || {};
         const items = outfit.items.map(i => ({ ...i, status: outfit.lockedItemIds.includes(i.itemId) ? 'owned' : ['owned','missing','skip','replaced'].includes(owned[i.id]) ? owned[i.id] : i.role === '可选' ? 'skip' : 'missing' }));
         const {profile,requirements:r}=outfit.requirementsSnapshot;
+        const budget=optionalNumber(input.budget??r.budget,0,10000);
         const plan = { id: crypto.randomUUID(), outfitId: outfit.id, title: outfit.title, date: new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }), scene: r.scenes.join('、'), ...r, avoids:r.avoid, changeAmount:r.exploration,change:r.exploration<34?'贴近日常':r.exploration<67?'稍作尝试':'大胆尝试',personal:{'性别':profile.gender,'年龄':profile.age??'','身高（cm）':profile.heightCm??'','体重（kg）':profile.weightKg??'','体型':profile.bodyType??''}, item: outfit.inputItems.map(i => i.name).join('、'), items, outfit: structuredClone(outfit), sourceUrl: outfit.sourceUrl, feedback: null };
-        data.plans.unshift(plan); data.plans = data.plans.slice(0, 100); write(user, data); send(res, 201, { plan }); return true;
+        plan.budget=budget;plan.outfit.requirementsSnapshot.requirements.budget=budget;
+        const latest=read(user);latest.plans.unshift(plan);latest.plans=latest.plans.slice(0,100);write(user,latest);send(res,201,{plan});return true;
       }
       if (/^\/api\/plans\/[^/]+\/feedback$/.test(pathname) && req.method === 'POST') {
         const plan = data.plans.find(p => p.id === pathname.split('/')[3]);
         if (!plan) throw fail(404, '计划不存在');
         requireValue(typeof input.worn === 'boolean', '穿着状态无效');
         plan.feedback = { worn: input.worn, satisfaction: input.worn ? text(input.satisfaction, 80) : null, reason: !input.worn ? text(input.reason, 80) : null, note: text(input.note) };
-        write(user, data); send(res, 200, { feedback: plan.feedback }); return true;
+        const latest=read(user);latest.plans.find(p=>p.id===plan.id).feedback=plan.feedback;write(user,latest);
+        let review={summary:'已保存实际反馈；规则模式不自动推断偏好。',preferences:[],mode:'rules'};
+        if(!legacy&&agents.readyFor('review')) {
+          if(busy.has(user)) { send(res,200,{feedback:plan.feedback,review:{...review,summary:'反馈已保存，另一任务处理中，暂不复盘。'}});return true; }
+          busy.add(user);
+          try { quota(user,req.socket.remoteAddress);review=await agents.run({action:'review',plan:{title:plan.title,items:plan.items,requirements:plan.outfit.requirementsSnapshot},feedback:plan.feedback},context); }
+          catch(error) { review.summary='反馈已保存；'+error.message+'，未自动生成偏好。'; }
+          finally { busy.delete(user); }
+        }
+        send(res, 200, { feedback: plan.feedback,review }); return true;
       }
       throw fail(404, '接口不存在');
     } catch (error) { send(res, error.status || 500, { error: error.status ? error.message : '服务暂时异常，请稍后重试' }); }

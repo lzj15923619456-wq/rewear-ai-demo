@@ -1,51 +1,79 @@
-# REWEAR · AI 辅助穿搭 Demo
+# REWEAR · 多 Agent 衣橱搭配 Demo
 
-从 1–3 件已有单品开始，结合场景、风格与补充要求，检索真实图片并生成穿搭清单。
+REWEAR 从用户已有衣物出发，完成单品识别、真实参考图检索与视觉核对、搭配推荐、衣柜局部修改、穿着复盘和经用户确认的偏好记忆。
 
-- [点击体验](https://rewear-ai-demo.onrender.com/)
-- [iPhone 预览](https://rewear-ai-demo.onrender.com/iphone-preview.html)
-- [源码](https://github.com/lzj15923619456-wq/rewear-ai-demo)
+- 在线 Demo：https://rewear-ai-demo.onrender.com/
+- GitHub：https://github.com/lzj15923619456-wq/rewear-ai-demo
 
-## 当前版本
+本项目的模型组合依据独立的离线、开发／验证和封存评测选出。评测证明的是当前数据与约束下的相对选择，不代表已经适用于所有衣物、审美或真实用户场景。
 
-界面图片与排列恢复自用户提供的 REWEAR-deploy-2026-10-05(2).zip。欢迎页、风格选项、场景与示例单品保留原设计；这些界面素材与实时 AI 参考图片分别管理。原设计摄影来源保留在 dist/assets/reference-photos.json、selection-photos.json；其再分发许可未独立核验，不能把它们标成新的授权图库。
+## 最终模型组合
 
-2026-10-09：原版图片和 Openverse 检索已发布到现有在线 Demo。真实灰色卫衣联调完成1套动态参考、追问、修改与保存；公开 Demo 复测出现模型 JSON 格式错误。随后 Coze 提示积分耗尽、已部署服务停服，AI 功能暂时不可用，不能宣称线上 AI 已完整验收。网页与示例可浏览；最新实测结果见 [验收记录](docs/AI-ACCEPTANCE.md)。未上线微信小程序。
+| 角色 | 生产模型 | 服务商 | 输入 |
+|---|---|---|---|
+| 主 Agent：需求整理与总结 | `deepseek-flash` | DeepSeek | 文本 |
+| 单品识别 | `qwen3.5-plus-2026-02-15` | 阿里云百炼 | 文本、图片 |
+| 参考图核对 | `kimi-k2.6` | Moonshot / Kimi | 文本、图片 |
+| 搭配推荐 | `qwen3.5-plus-2026-02-15` | 阿里云百炼 | 文本 |
+| 衣柜问答与局部修改 | `deepseek-flash` | DeepSeek | 文本 |
+| 穿着复盘与偏好提取 | `deepseek-flash` | DeepSeek | 文本 |
 
-## 如何运行
+参数保持评测口径：并发 1、每项任务 30 秒、文本 `max_tokens=6500`、视觉 `max_tokens=1800`、温度 0.2；Kimi 非思考模式温度 0.6；DeepSeek、Kimi 和千问关闭思考；要求 JSON Object。生产不配置跨模型自动降级，失败会明确进入规则模式。
 
-需要 Node.js 24.x 与 pnpm 11.25.0。安装并启动：
+当前已知限制：单品识别绝对通过率仍低；联网检索和视觉接受率受授权图片、搜索词及照片质量影响；完整流程封存样本有限；搭配审美存在主观性；免费 Render 的冷启动与临时存储会影响速度和数据持久性。
+
+## 本机运行
+
+需要 Node.js 24.x、pnpm 11.25.0。
 
 ```sh
 pnpm install --frozen-lockfile
-# 将 .env.example 复制为私有 .env，并填 Coze 配置
+pnpm test
 pnpm start
 ```
 
-打开 http://127.0.0.1:4174/iphone-preview.html 。两组 COZE_*_BASE_URL 与 COZE_*_TOKEN 可共用同一个工作流。后端请求基础域名下的 /run。不要把实际 Token 放在网页、GitHub、截图或 ZIP。Openverse 公开检索无需新增密钥；PHOTO_SEARCH_ENABLED=0 可关闭检索进行离线回归。
+打开 `http://127.0.0.1:4174/iphone-preview.html`。真实模型测试会产生用量：
 
-## 功能与架构
+```sh
+node scripts/test-live-ai.cjs --run --image 你有权使用的清晰单品照片路径 --slot upper
+node scripts/test-live-ai.cjs --run --network --image 你有权使用的清晰单品照片路径 --slot upper
+```
 
-网页负责交互；Node 后端负责会话、校验、保存、图片检索与缓存；Coze 负责识图、核对参考图、规划、追问与调整。调用链见 [接入说明](docs/AI-SETUP.md)。
+## 私密配置
 
-上传照片 → Coze analyze → 用户确认衣物 → 后端检索/授权过滤/去重 → Coze inspect_references 看图核对 → Coze recommend 生成清单 → 后端检查引用与锁定衣物 → 用户核对、追问、调整、保存。
+复制 `.env.example` 为 `.env.local`。密钥只保存在本机 `.env.local` 或 Render 服务的 **Environment** 页面；不要写入源码、日志、截图或 Git。
 
-每个有效 Coze action 调用模型一次；一次网页推荐通常有两次模型调用（看图和规划）。无效请求不调用模型，不自动重试、不生成试穿图片、不执行模型代码。建议无法满足时返回问题或少量方案。
+必须配置：
 
-## 图片与匹配边界
+- `REWEAR_LLM_API_KEY`：DeepSeek Key。
+- `REWEAR_LLM_ITEM_BASE_URL`、`REWEAR_LLM_ITEM_API_KEY`：百炼 OpenAI 兼容地址与 Key。
+- `REWEAR_LLM_REFERENCE_BASE_URL`、`REWEAR_LLM_REFERENCE_API_KEY`：Kimi 地址与 Key。
+- `REWEAR_LLM_STYLIST_BASE_URL`、`REWEAR_LLM_STYLIST_API_KEY`：百炼 OpenAI 兼容地址与 Key。
 
-Openverse 是开放许可图片索引，检索限定 CC BY、CC BY-SA、CC0、Public Domain；保留作者、原图页、许可与缩图改动声明。只向搜索服务发送衣物与风格标签，不发送年龄、身高、体重或私密备注。服务端从固定 Openverse 缩图接口取图并缓存，再同源提供给网页。
+模型 ID、非私密参数和全部变量见 [模型与生产配置](docs/MODEL-CONFIG.md)。服务端会把上传图片压缩为 JPEG Base64 后发给视觉模型；搜索服务只收到衣物类别、颜色、场景与风格标签，不接收个人身材或自由备注。
 
-模型必须核对主单品类别与相近颜色，拒绝看不清、无关或非人物搭配图。它仍可能看错，来源平台也可能有错误元数据；图片不代表用户已经穿上这些衣物。其他录入衣物与照片的差异必须说明。
+## 实际编排
 
-在线检索失败或没有可靠候选时，仅在适用的女性黑西装场景使用 references-new.json 中 8 张已人工核对的备用参考；其他类别不会硬套这批图片。不足六套不会重复凑数。查看更多排除已有图片 ID 与相似缩图。
+后端按固定流程调度角色与工具，不把它描述为模型自由规划：
 
-匹配百分比是标签规则分（风格40、场景30、尝试程度20、避免效果10），不是置信度或合身保证。鞋履舒适度与尺码需试穿。
+1. 用户上传单品，识别 Agent 给出属性，用户确认后保存。
+2. 主 Agent 整理需求；硬条件不清楚时先追问。
+3. 后端检索 Openverse 中许可明确的 StockSnap／Wikimedia 图片并去重、缓存。
+4. 参考图 Agent 核对锁定衣物、完整穿搭和参考价值。
+5. 搭配 Agent 只使用通过核对的候选 ID；后端再次验证 ID、锁定衣物和数量。
+6. 衣柜 Agent 回答问题或局部修改；需要确认时保留原方案和记忆。
+7. 复盘 Agent 只提出偏好候选；用户点击确认后才写入当前匿名会话记忆。
 
-## 部署与限制
+模型不可用时页面会明确显示规则降级。规则结果不算真实 AI 成功；无合格参考时返回不足，不重复图片凑数。
 
-现有免费 Render 服务在新加坡，使用 Node 后端，GitHub Pages 不能单独运行。部署步骤见 [发布说明](docs/PUBLISH.md)。免费实例冷启动可能约一分钟，重启或重新部署会丢失本地数据库、上传照片与缓存；持久记录需持久存储。匿名 Cookie 隔离访客，清除 Cookie 后无法找回会话，没有微信登录或跨设备同步。
+## 验证范围与资料
 
-AI 体验限额为每会话每天12次、每连接IP每天24次、全站每天60次网页操作；一次推荐可能调用模型两次。代理可能使多用户共用 IP 限额。模型用量与搜索服务频率均有各自限制。
+`pnpm test` 覆盖六角色路由、各供应商请求参数、联网图片安全与去重、锁定项、衣柜版本、追问保留、记忆确认、会话隔离和前端转义。生产迁移证据见 [生产迁移与验证记录](docs/PRODUCTION-MIGRATION-2026-10-16.md)，架构见 [多 Agent 架构](docs/MULTI-AGENT.md)。
 
-pnpm test 运行本地模拟回归。真实验收须显式运行 scripts/test-live-ai.cjs --run --image 本机清晰单品照片路径，会产生模型用量；不自动重试。发布排除 .env、storage、.runtime、日志、node_modules 和个人上传照片。
+评测原始数据和封存结果保留在本机独立评测目录，没有复制进生产仓库；生产迁移没有修改冻结金标、评分或封存指纹。
+
+## 部署
+
+仓库包含 `render.yaml`。Render 服务使用 `pnpm install --prod --frozen-lockfile` 和 `node server.cjs`，健康检查为 `/__rewear_health`。推送 `main` 后由现有服务自动部署；私密变量需在 Render Dashboard → `rewear-ai-demo` → **Environment** 设置。
+
+免费实例使用 `/tmp/rewear-demo`，重启或重新部署可能丢失匿名记录、上传图片和缓存。中国大陆访问受运营商、跨境网络和 Render 可用性影响，需用关闭代理的移动网络做发布后实测。

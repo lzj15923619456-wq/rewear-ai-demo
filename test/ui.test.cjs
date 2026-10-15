@@ -33,3 +33,20 @@ test('AI checklists preserve their own input snapshot and escape model output; s
   assert.ok(saved.includes('saved-reference.jpg'));
   assert.ok(!saved.includes('<script>bad</script>'));
 });
+
+test('Agent stream tolerates intermediate errors, decodes split UTF-8 and escapes collaboration text', async () => {
+  const context=vm.createContext({console,localStorage:{getItem:()=>null},document:{querySelector:s=>s==='#modal'?{addEventListener(){}}:null},window:{},setTimeout,clearTimeout,AbortController,AbortSignal,TextDecoder});
+  for(const file of ['data.js','ui.js','results.js','app.js','agents.js']) {
+    let code=fs.readFileSync(path.join(__dirname,'../dist',file),'utf8');
+    if(file==='app.js')code=code.replace(/render\(\);\s*$/, '');
+    vm.runInContext(code,context,{filename:file});
+  }
+  vm.runInContext('render=()=>{};go=v=>{state.view=v;};',context);
+  let streamText=[{agent:'main',type:'error',data:{message:'<img src=x onerror=bad()>模型失败'}},{agent:'main',type:'log',data:{mode:'rules',message:'降级为规则'}},{agent:'main',type:'done',data:{result:{mode:'rules',summary:'保留单品',outfits:[]}}}].map(JSON.stringify).join('\n');
+  context.fetch=async()=>new Response(new ReadableStream({start(c){for(const byte of Buffer.from(streamText))c.enqueue(Uint8Array.of(byte));c.close();}}));
+  const result=await vm.runInContext('AgentHub.run({})',context);
+  assert.equal(result.mode,'rules');assert.equal(result.summary,'保留单品');
+  const html=vm.runInContext('agentProcessView()',context);assert.ok(html.includes('&lt;img'));assert.ok(!html.includes('<img src=x'));assert.ok(html.includes('模型失败'));
+  streamText=JSON.stringify({agent:'main',type:'error',data:{final:true,message:'最终失败'}});
+  await assert.rejects(vm.runInContext('AgentHub.run({})',context),/最终失败/);
+});
