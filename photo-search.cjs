@@ -82,7 +82,7 @@ function createPhotoSearch({ db, dataDir, fetcher = fetch }) {
       else {
         // Commons photographs have category=null; genre and source gates replace the category filter.
         const url = new URL(API); url.search = new URLSearchParams({ q, source:'stocksnap,wikimedia', license: [...LICENSES].join(','), page_size: '20', page: String(page), mature: 'false', filter_dead: 'true' }).toString();
-        const response = await fetcher(url, { signal: AbortSignal.timeout(12000), redirect: 'error', headers: { 'User-Agent': 'REWEAR-outfit-demo/1.0' } });
+        const response = await fetcher(url, { signal: AbortSignal.timeout(30000), redirect: 'error', headers: { 'User-Agent': 'REWEAR-outfit-demo/1.0' } });
         const json = JSON.parse((await limitedBytes(response, 1000000)).toString());
         if (!Array.isArray(json.results)) throw failure('图片搜索返回格式无效');
         results = json.results.map(photoRecord).filter(Boolean);
