@@ -3,7 +3,7 @@ const icon=n=>`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="current
 const UPPER_SAMPLE_IMAGE='assets/blazer-product-white.png';
 const isManagedOutfit=o=>Boolean(o&&(o.ai||o.managed));
 const itemSlots=[{id:'upper',label:'上衣',empty:'添加一件上衣'},{id:'bottom',label:'裤装',empty:'添加一件裤装'},{id:'shoes',label:'鞋类',empty:'添加一双鞋'}];
-const state={view:'welcome',scenes:['日常通勤'],avoids:['太正式','显得沉闷'],styles:['简约日常'],change:'稍作尝试',changeAmount:50,intakeItems:{upper:null,bottom:null,shoes:null},generated:false,deckIndex:0,deckLimit:6,selected:null,owned:{},substitutions:{},revisions:{},saved:[],relaxed:[],feedback:{},personal:{'性别':'女性','年龄':'29'},note:'',budget:300,wardrobe:[],previewMode:'model'};
+const state={view:'welcome',scenes:['日常通勤'],avoids:[],styles:[],change:'稍作尝试',changeAmount:50,intakeItems:{upper:null,bottom:null,shoes:null},generated:false,deckIndex:0,deckLimit:6,selected:null,owned:{},substitutions:{},revisions:{},saved:[],relaxed:[],feedback:{},personal:{'性别':'女性','年龄':'29'},note:'',budget:300,wardrobe:[],previewMode:'model'};
 
 const genderOptions=['女性','男性','其他'];
 const personalWheelFields=[

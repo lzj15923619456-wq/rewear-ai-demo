@@ -4,6 +4,28 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
+test('style intake is garment-neutral and starts without hidden style or avoid defaults', () => {
+  const context=vm.createContext({console,localStorage:{getItem:()=>null},document:{querySelector:s=>s==='#modal'?{addEventListener(){}}:null},window:{},setTimeout,clearTimeout});
+  for(const file of ['data.js','ui.js','results.js','app.js']){
+    let code=fs.readFileSync(path.join(__dirname,'../dist',file),'utf8');
+    if(file==='app.js')code=code.replace(/render\(\);\s*$/, '');
+    vm.runInContext(code,context,{filename:file});
+  }
+  assert.equal(vm.runInContext('styleOptions.length',context),8);
+  assert.equal(vm.runInContext("styleOptions.some(x=>x.name==='街头风')",context),true);
+  assert.equal(vm.runInContext("styleOptions.some(x=>x.name==='极简 Clean Fit')",context),true);
+  assert.equal(vm.runInContext('state.styles.length+state.avoids.length',context),0);
+  vm.runInContext("state.intakeItems.upper={name:'灰色卫衣'}",context);
+  const styleHtml=vm.runInContext('preferencePicker()',context);
+  const avoidHtml=vm.runInContext('comfortPreferences()',context);
+  assert.ok(styleHtml.includes('本次围绕：灰色卫衣'));
+  assert.ok(!styleHtml.includes('每张都是黑西装'));
+  assert.equal(vm.runInContext('avoidOptions.length',context),8);
+  assert.ok(avoidHtml.includes('avoid-photo'));
+  assert.ok(avoidHtml.includes('太运动'));
+  assert.ok(avoidHtml.includes('先追问'));
+});
+
 test('AI checklists preserve their own input snapshot and escape model output; saved plans retain their photo', () => {
   const dialog = {addEventListener(){},setAttribute(){},showModal(){},innerHTML:''};
   const context = vm.createContext({console,localStorage:{getItem:()=>null},document:{querySelector:()=>dialog},window:{},setTimeout,clearTimeout});

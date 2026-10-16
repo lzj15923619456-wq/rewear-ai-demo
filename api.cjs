@@ -31,12 +31,17 @@ function normalizeRequirements(input) {
   requireValue(scenes.length && styles.length, '至少选择一个场景和一种风格');
   return {
     profile: { gender, age, heightCm: optionalNumber(p['身高（cm）'], 80, 230), weightKg: optionalNumber(p['体重（kg）'], 20, 250), bodyType: text(p['体型'], 40) || null },
-    requirements: { scenes, styles, avoid: list(input.avoids, 6), exploration, styleReference: text(p['风格参考'], 80) || null, note: text(input.note), budget: optionalNumber(input.budget, 0, 10000) }
+    requirements: { scenes, styles, avoid: list(input.avoids, 8), exploration, styleReference: text(p['风格参考'], 80) || null, note: text(input.note), budget: optionalNumber(input.budget, 0, 10000) }
   };
 }
+function sameConcept(a, b) {
+  const groups = [/极简|clean\s*fit/i,/松弛|休闲|casual|relaxed/i,/通勤|职场|利落|workwear|smart\s*casual/i,/街头|street/i,/运动|机能|sporty|utility/i,/复古|vintage/i,/温柔|浪漫|romantic/i,/个性|混搭|eclectic|layered/i,/周末|日常|出门/i,/约会|date/i,/聚会|社交|party/i,/旅行|旅游|travel/i];
+  const left=text(a,80).toLowerCase(),right=text(b,80).toLowerCase();
+  return !!left && !!right && (groups.some(re => re.test(left) && re.test(right)) || left.includes(right) || right.includes(left));
+}
 function scoreReference(reference, requirements) {
-  const styleHits = requirements.styles.filter(s => reference.styles.includes(s));
-  const sceneHits = requirements.scenes.filter(s => reference.scenes.includes(s));
+  const styleHits = requirements.styles.filter(s => reference.styles.some(tag => sameConcept(s, tag)));
+  const sceneHits = requirements.scenes.filter(s => reference.scenes.some(tag => sameConcept(s, tag)));
   const conflicts = requirements.avoid.filter(s => reference.effects.includes(s));
   const style = Math.round(40 * styleHits.length / requirements.styles.length);
   const scene = Math.round(30 * sceneHits.length / requirements.scenes.length);
@@ -96,7 +101,7 @@ function createApi(options = {}) {
   const agents = createAgents(config, fetcher);
   const legacy = config.REWEAR_AI_PROVIDER === 'coze';
   const ready = kind => legacy ? Boolean(config[`COZE_${kind}_BASE_URL`] && config[`COZE_${kind}_TOKEN`]) : kind==='ANALYZE'?agents.readyFor('item'):agents.ready;
-  const photoSearch = createPhotoSearch({ db, dataDir, fetcher });
+  const photoSearch = createPhotoSearch({ db, dataDir, fetcher, unsplashKey:config.UNSPLASH_ACCESS_KEY });
   const searchEnabled = config.PHOTO_SEARCH_ENABLED !== '0';
   async function run(kind, payload, context = {}) {
     if (!legacy) {
@@ -180,7 +185,7 @@ function createApi(options = {}) {
         send(res,200,{ready:ready('ANALYZE')&&ready('STYLIST'),mode:legacy?'coze':agents.ready?'ai':'rules',agents:agents.names,configuredAgents:legacy?undefined:agents.configured,identity:'anonymous-session',timeoutSeconds:30});return true;
       }
       if (pathname === '/api/status' && req.method === 'GET') {
-        send(res, 200, { analyzeReady: ready('ANALYZE'), stylistReady: ready('STYLIST'), referenceCount: references.length, imageSearch: searchEnabled ? 'openverse' : 'disabled', mode:legacy?'coze':agents.ready?'ai':'rules', identity: 'anonymous-session', uploadProcessing:legacy?'coze':ready('ANALYZE')?'vision':'manual', storage: 'sqlite' }); return true;
+        send(res, 200, { analyzeReady: ready('ANALYZE'), stylistReady: ready('STYLIST'), referenceCount: references.length, imageSearch: searchEnabled ? config.UNSPLASH_ACCESS_KEY ? 'openverse+unsplash' : 'openverse' : 'disabled', mode:legacy?'coze':agents.ready?'ai':'rules', identity: 'anonymous-session', uploadProcessing:legacy?'coze':ready('ANALYZE')?'vision':'manual', storage: 'sqlite' }); return true;
       }
       if (pathname === '/api/records' && req.method === 'GET') {
         send(res, 200, { plans: data.plans, items: data.items.map(({ imageData, ...item }) => item), outfits: data.outfits, preferences:data.preferences||[] }); return true;
@@ -274,7 +279,7 @@ function createApi(options = {}) {
           if (searchEnabled && (legacy ? ready('STYLIST') : agents.readyFor('reference')) && main.mode!=='rules') {
             emit({agent:'stylist',type:'log',data:{message:'调用图片检索工具，随后分批核对真实照片'}});
             let photos;
-            try { photos = await photoSearch.search(lockedItems, request.requirements, exclude); }
+            try { photos = await photoSearch.search(lockedItems, request.requirements, exclude); warnings.push(...list(photos.report?.warnings)); }
             catch (error) { photos = []; warnings.push(error.status ? error.message : '图片检索连接暂时失败'); }
             if (photos.length) {
               const checked = [];
@@ -282,7 +287,7 @@ function createApi(options = {}) {
               // Two compact sequential calls avoid one large response and low-tier RPM/concurrency limits.
               for (let start = 0; start < photos.length; start += 6) {
                   const batch = photos.slice(start, start + 6);
-                  const inspection = await run('STYLIST', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'inspect_references', lockedItems:snapshot.lockedItems, requirements:{styles:request.requirements.styles,scenes:request.requirements.scenes,exploration:request.requirements.exploration}, imageCandidates: batch.map(({id,imageData}) => ({referenceId:id,imageUrl:imageData})) } },context);
+                  const inspection = await run('STYLIST', { payload: { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'inspect_references', lockedItems:snapshot.lockedItems, requirements:{styles:request.requirements.styles,scenes:request.requirements.scenes,avoid:request.requirements.avoid,exploration:request.requirements.exploration,styleReference:request.requirements.styleReference}, constraints:main.constraints||[], imageCandidates: batch.map(({id,imageData}) => ({referenceId:id,imageUrl:imageData})) } },context);
                   if (inspection.mode === 'rules') { warnings.push(...list(inspection.warnings)); continue; }
                   const valid = analyzedReferences(inspection, batch, lockedItems, request.requirements).filter(ref=>!(request.requirements.avoid.includes('不想露肤')&&ref.effects.includes('不想露肤')));
                   inspected += batch.length;

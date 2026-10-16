@@ -6,22 +6,22 @@ const outfitProfiles={
   whiteDenim:{family:'mono',degree:30,scenes:['日常通勤','周末出门','旅行','看展'],effects:[]},
   warmSkirt:{family:'skirt',degree:55,scenes:['日常通勤','朋友聚会','约会','看展'],effects:['过于甜美']},
   airySkirt:{family:'skirt',degree:65,scenes:['周末出门','朋友聚会','约会','旅行','看展'],effects:['过于甜美']},
-  color:{family:'denim',degree:90,scenes:['周末出门','朋友聚会','约会','看展'],effects:['太过张扬']},
-  black:{family:'mono',degree:50,scenes:['日常通勤','朋友聚会','约会','看展'],effects:['显得沉闷']},
+  color:{family:'denim',degree:90,scenes:['周末出门','朋友聚会','约会','看展'],effects:['颜色太亮']},
+  black:{family:'mono',degree:50,scenes:['日常通勤','朋友聚会','约会','看展'],effects:['颜色太暗']},
   mini:{family:'skirt',degree:80,scenes:['周末出门','朋友聚会','约会','看展'],effects:['不想露肤']},
   preppy:{family:'skirt',degree:65,scenes:['周末出门','朋友聚会','约会','看展'],effects:['不想露肤','过于甜美']},
-  leather:{family:'skirt',degree:85,scenes:['朋友聚会','约会','看展'],effects:['显得沉闷','不想露肤']},
-  slouchy:{family:'denim',degree:60,scenes:['周末出门','朋友聚会','看展'],effects:['显得沉闷','不够利落']}
+  leather:{family:'skirt',degree:85,scenes:['朋友聚会','约会','看展'],effects:['颜色太暗','不想露肤']},
+  slouchy:{family:'denim',degree:60,scenes:['周末出门','朋友聚会','看展'],effects:['颜色太暗','太松垮']}
 };
 const extraLooks=[
-  {id:'whiteDenim',base:'mono',styleName:'黑白通勤',title:'白色牛仔，让通勤更轻快',subtitle:'黑色西装 × 白色直筒牛仔',reason:'用白色牛仔提亮黑西装，鞋履保持简洁，通勤也能轻松一点。',bottom:'白色直筒牛仔裤',difference:'参考图为深色内搭、白色破洞牛仔和黑色踝靴。本方案改用浅色内搭、少破洞的白色直筒牛仔与简洁运动鞋。'},
-  {id:'warmSkirt',base:'skirt',styleName:'暖调知性',title:'用暖棕色，柔化黑西装',subtitle:'黑色西装 × 暖棕中长裙',reason:'暖棕裙装与黑西装形成柔和层次，日常、看展和聚会都能尝试。',bottom:'暖棕色中长半裙',difference:'参考照片只用于色彩和轮廓参考；本方案保留录入单品，鞋履可沿用轻便平底款。'},
-  {id:'airySkirt',base:'skirt',styleName:'轻盈裙装',title:'白裙和黑西装的轻盈平衡',subtitle:'黑色西装 × 白色中长裙',reason:'黑色外套压住白裙的甜度，搭平底鞋，让轻盈和利落同时出现。',bottom:'白色中长半裙',difference:'参考图为泡泡裙。本方案以好活动的白色中长裙替代，检查裙长和实际透光程度。'},
-  {id:'color',base:'denim',styleName:'彩色混搭',title:'给基础搭配一点亮色',subtitle:'黑色西装 × 彩色内搭',reason:'以黑西装为基础，只用一处亮色内搭或包袋表达个性。',difference:'原照有多处彩色细节。本方案只留一处亮色，其他单品沿用基础款。'},
-  {id:'black',base:'mono',styleName:'收腰精致',title:'全黑搭配，也留出层次',subtitle:'黑色西装 × 深色下装',reason:'用材质和松量变化区分深色单品，配饰保持轻巧。',bottom:'深色直筒裤',difference:'参考图为收腰西装。本方案保留录入的西装，通过敞开外套和内搭比例调整层次。'},
-  {id:'mini',base:'skirt',styleName:'短裙酷感',title:'短裙与长靴的利落组合',subtitle:'黑色西装 × 简洁短裙',reason:'直线条短裙配长靴，把西装穿出更鲜明的轮廓。',bottom:'简洁黑色短裙',shoes:'舒适低跟长靴',difference:'参考图的裙长与鞋跟高度需要结合实际穿着调整，露肤偏好需另外核对。'},
-  {id:'preppy',base:'skirt',styleName:'学院风',title:'百褶裙，让西装轻快起来',subtitle:'黑色西装 × 百褶短裙',reason:'百褶裙、白袜和乐福鞋带来学院感，外套保留干净肩线。',bottom:'深色百褶短裙',shoes:'黑色乐福鞋',difference:'参考照片含短裙和白袜，若不想露肤可换长裙或裤装，照片不会自动改变。'},
-  {id:'leather',base:'skirt',styleName:'复古皮革',title:'一点皮革质感，更有个性',subtitle:'黑色西装 × 皮革质感下装',reason:'用一件皮革质感单品增加复古感，其他配饰尽量简洁。',bottom:'简洁皮革质感半裙',shoes:'低跟长靴',difference:'参考图为皮革西装；本方案保留你的外套，将皮革质感放在下装。'},
+  {id:'whiteDenim',base:'mono',styleName:'极简 Clean Fit',title:'白色牛仔，让通勤更轻快',subtitle:'黑色西装 × 白色直筒牛仔',reason:'用白色牛仔提亮黑西装，鞋履保持简洁，通勤也能轻松一点。',bottom:'白色直筒牛仔裤',difference:'参考图为深色内搭、白色破洞牛仔和黑色踝靴。本方案改用浅色内搭、少破洞的白色直筒牛仔与简洁运动鞋。'},
+  {id:'warmSkirt',base:'skirt',styleName:'温柔浪漫',title:'用暖棕色，柔化黑西装',subtitle:'黑色西装 × 暖棕中长裙',reason:'暖棕裙装与黑西装形成柔和层次，日常、看展和聚会都能尝试。',bottom:'暖棕色中长半裙',difference:'参考照片只用于色彩和轮廓参考；本方案保留录入单品，鞋履可沿用轻便平底款。'},
+  {id:'airySkirt',base:'skirt',styleName:'温柔浪漫',title:'白裙和黑西装的轻盈平衡',subtitle:'黑色西装 × 白色中长裙',reason:'黑色外套压住白裙的甜度，搭平底鞋，让轻盈和利落同时出现。',bottom:'白色中长半裙',difference:'参考图为泡泡裙。本方案以好活动的白色中长裙替代，检查裙长和实际透光程度。'},
+  {id:'color',base:'denim',styleName:'个性混搭',title:'给基础搭配一点亮色',subtitle:'黑色西装 × 彩色内搭',reason:'以黑西装为基础，只用一处亮色内搭或包袋表达个性。',difference:'原照有多处彩色细节。本方案只留一处亮色，其他单品沿用基础款。'},
+  {id:'black',base:'mono',styleName:'通勤利落',title:'全黑搭配，也留出层次',subtitle:'黑色西装 × 深色下装',reason:'用材质和松量变化区分深色单品，配饰保持轻巧。',bottom:'深色直筒裤',difference:'参考图为收腰西装。本方案保留录入的西装，通过敞开外套和内搭比例调整层次。'},
+  {id:'mini',base:'skirt',styleName:'街头风',title:'短裙与长靴的利落组合',subtitle:'黑色西装 × 简洁短裙',reason:'直线条短裙配长靴，把西装穿出更鲜明的轮廓。',bottom:'简洁黑色短裙',shoes:'舒适低跟长靴',difference:'参考图的裙长与鞋跟高度需要结合实际穿着调整，露肤偏好需另外核对。'},
+  {id:'preppy',base:'skirt',styleName:'复古',title:'百褶裙，让西装轻快起来',subtitle:'黑色西装 × 百褶短裙',reason:'百褶裙、白袜和乐福鞋带来学院感，外套保留干净肩线。',bottom:'深色百褶短裙',shoes:'黑色乐福鞋',difference:'参考照片含短裙和白袜，若不想露肤可换长裙或裤装，照片不会自动改变。'},
+  {id:'leather',base:'skirt',styleName:'复古',title:'一点皮革质感，更有个性',subtitle:'黑色西装 × 皮革质感下装',reason:'用一件皮革质感单品增加复古感，其他配饰尽量简洁。',bottom:'简洁皮革质感半裙',shoes:'低跟长靴',difference:'参考图为皮革西装；本方案保留你的外套，将皮革质感放在下装。'},
   {id:'slouchy',base:'denim',image:'assets/avoid-slouchy.jpg',credit:'@emmarosestyle',sourceUrl:'https://www.whowhatwear.com/uk/chunky-sandal-outfits',styleName:'松弛休闲',title:'宽松轮廓，穿得自在一些',subtitle:'黑色西装 × 宽松牛仔',reason:'以宽松牛仔放松西装轮廓，日常走动时注意收好裤脚长度。',bottom:'宽松蓝色牛仔裤',difference:'参考图裤脚有堆积。本方案建议调整裤长，避免拖地；仍需实际试穿核对。'}
 ];
 extraLooks.forEach((look,index)=>{

@@ -5,10 +5,15 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const sharp = require('sharp');
-const { createApi, normalizeRequirements, validateOutfits, decodeImage } = require('../api.cjs');
+const { createApi, normalizeRequirements, scoreReference, validateOutfits, decodeImage } = require('../api.cjs');
 
 const requirements = {personal:{性别:'女性',年龄:29},scenes:['日常通勤'],styles:['简约日常'],avoids:[],changeAmount:50,note:'走很多路'};
 const reference = {id:'test-photo',image:'assets/test.jpg',sourceUrl:'https://example.org/photo',credit:'Test fixture',styles:['简约日常'],scenes:['日常通勤'],exploration:50,effects:[],description:'真实参考元数据测试样例'};
+test('semantic style labels score without requiring identical wording and all eight avoid choices survive normalization',()=>{
+  const normalized=normalizeRequirements({...requirements,styles:['极简 Clean Fit'],avoids:['太正式','太松垮','颜色太暗','颜色太亮','过于甜美','装饰太多','不想露肤','太运动']});
+  assert.equal(normalized.requirements.avoid.length,8);
+  assert.equal(scoreReference({...reference,styles:['极简'],scenes:['通勤']},normalized.requirements).style,40);
+});
 test('non-blazer HTTP flow searches and inspects photos, serves cached images, revises and saves a dynamic reference',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'rewear-online-test-'));
   const photoId='324709e5-375e-435a-bfab-e190fa111c6a';
