@@ -8,6 +8,7 @@ const { createAgents } = require('./agents/orchestrator.cjs');
 const { ruleResult } = require('./agents/rules.cjs');
 
 const slots = ['upper', 'bottom', 'shoes'];
+const OUTFIT_BATCH_SIZE = 3;
 const text = (value, max = 1000) => typeof value === 'string' ? value.trim().slice(0, max) : '';
 const fail = (status, message) => Object.assign(new Error(message), { status });
 function requireValue(condition, message) { if (!condition) throw fail(400, message); }
@@ -51,10 +52,10 @@ function scoreReference(reference, requirements) {
 }
 function validateOutfits(result, candidates, lockedItems, count) {
   requireValue(result && typeof result === 'object', 'AI 返回了无效结果');
-  if (result.status === 'needs_confirmation') return [];
+  if (['needs_confirmation', 'insufficient_references'].includes(result.status)) return [];
   const rows = result.outfits;
   if (!Array.isArray(rows)) throw fail(502, 'AI 返回的方案格式不正确');
-  if (rows.length > count) throw fail(502, 'AI 返回数量超出请求范围');
+  if (rows.length !== count) throw fail(502, `AI 应返回 ${count} 套完整方案`);
   const seen = new Set();
   return rows.map(row => {
     const reference = candidates.find(c => c.id === row.referenceId);
@@ -299,8 +300,8 @@ function createApi(options = {}) {
               warnings.push(inspected ? `已在线检索并看图核对 ${inspected} 张图片，本轮通过 ${checked.length} 张有搭配参考价值的照片；图片与已有衣物仍可能存在差异。` : '本轮网络图片核对未完成，未使用网络候选。');
             } else warnings.push('本次在线检索未取得可用图片；仅在已有参考确实适用时提供方案。');
           }
-          if (!candidates.length) { send(res, 200, { status: 'insufficient_references', outfits: [], mode:main.mode, summary:main.summary, warnings: [...warnings, '未找到同时满足单品匹配和穿搭参考质量的图片，不会用普通随拍凑数；请调整条件或稍后再试。'] }); return true; }
-          const count = Math.min(6, candidates.length);
+          if (candidates.length < OUTFIT_BATCH_SIZE) { send(res, 200, { status: 'insufficient_references', outfits: [], mode:main.mode, summary:main.summary, warnings: [...warnings, `仅找到 ${candidates.length} 张合格且不重复的参考图；至少需要 ${OUTFIT_BATCH_SIZE} 张才能生成一组，不会复制图片凑数。`] }); return true; }
+          const count = OUTFIT_BATCH_SIZE;
           const payload = { schemaVersion: 1, requestId: crypto.randomUUID(), action: 'recommend', ...snapshot, constraints:main.constraints||[], referenceCandidates: candidates.map(ref => ({ referenceId:ref.id,styles:ref.styles,scenes:ref.scenes,exploration:ref.exploration,effects:ref.effects,description:ref.description,styleEvidence:ref.styleEvidence,garments:ref.garments,baseline:scoreReference(ref,request.requirements) })), count };
           const result = main.mode==='rules'?ruleResult(payload):await run('STYLIST', { payload },context);
           if(result.mode==='rules')emit({agent:'stylist',type:'done',data:{mode:'rules',message:'按标签基线排序适用参考，未调用智能规划'}});
@@ -312,10 +313,8 @@ function createApi(options = {}) {
           const generated = rows.map(row => ({ id: crypto.randomUUID(), referenceId: row.reference.id, ai: result.mode!=='rules', managed:true, mode:result.mode||'ai', agent:'stylist', agentSummary:main.summary, version: 1, tag: result.mode==='rules'?'REWEAR / RULES':'REWEAR / AGENT', title: row.title, subtitle: row.subtitle, style: row.style, reason: row.reason, difference: row.difference || '真实参考照片未换成你的衣物，请以保留单品和搭配清单为准。', keep: row.keep, avoid: row.avoid, items: row.items, image: row.reference.image, sourceUrl: row.reference.sourceUrl, credit: row.reference.credit, license: row.reference.license, licenseUrl: row.reference.licenseUrl, photoChanges: row.reference.changes, match: scoreReference(row.reference, request.requirements), requirementsSnapshot: snapshot, lockedItemIds: itemIds, inputItems: lockedItems.map(({ imageData, ...i }) => i) }));
           if(controller.signal.aborted)throw fail(499,'任务已停止');
           const latest = read(user); latest.outfits.push(...generated); latest.outfits = latest.outfits.slice(-120); write(user, latest);
-          const status = (!result.status || result.status === 'completed') && generated.length < 6 ? 'insufficient_references' : result.status || 'completed';
           warnings.push(...list(result.warnings));
-          if (generated.length > 0 && generated.length < 6) warnings.push(`当前条件下本轮提供 ${generated.length} 套真实参考方案，不足六套时不会重复凑数。`);
-          send(res, 200, { status, outfits: generated, questions: list(result.questions), warnings, requirementsSnapshot: snapshot, summary:main.summary, mode:result.mode||'ai' });
+          send(res, 200, { status: result.status || 'completed', outfits: generated, questions: list(result.questions), warnings, requirementsSnapshot: snapshot, summary:main.summary, mode:result.mode||'ai' });
         } finally { busy.delete(user); }
         return true;
       }

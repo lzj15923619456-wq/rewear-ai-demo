@@ -16,23 +16,23 @@ test('semantic style labels score without requiring identical wording and all ei
 });
 test('non-blazer HTTP flow searches and inspects photos, serves cached images, revises and saves a dynamic reference',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'rewear-online-test-'));
-  const photoId='324709e5-375e-435a-bfab-e190fa111c6a';
-  const photoBytes=await sharp({create:{width:300,height:450,channels:3,background:'#888'}}).jpeg().toBuffer();
+  const photoIds=['324709e5-375e-435a-bfab-e190fa111c6a','424709e5-375e-435a-bfab-e190fa111c6a','524709e5-375e-435a-bfab-e190fa111c6a'];
+  const photoBytes=await Promise.all(photoIds.map((_,index)=>{const raw=Buffer.alloc(96*128*3);let seed=index+1;for(let i=0;i<raw.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;raw[i]=seed>>>24;}return sharp(raw,{raw:{width:96,height:128,channels:3}}).jpeg().toBuffer();}));
   const actions=[];
   const api=createApi({dataDir:directory,references:[],config:{REWEAR_AI_PROVIDER:'coze',COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(url,options)=>{
     const u=new URL(url);
     if(u.hostname==='api.openverse.org'){
-      if(u.pathname.endsWith('/thumb/'))return new Response(photoBytes);
+      if(u.pathname.endsWith('/thumb/'))return new Response(photoBytes[photoIds.findIndex(id=>u.pathname.includes(id))]);
       assert.match(u.searchParams.get('q'),/hoodie/);
-      return Response.json({results:[{id:photoId,source:'stocksnap',tags:[{name:'fashion'}],title:'Grey hoodie',creator:'Fixture author',foreign_landing_url:'https://example.org/photo',license:'by-sa',license_version:'2.0',license_url:'https://creativecommons.org/licenses/by-sa/2.0/',width:300,height:450}]});
+      return Response.json({results:photoIds.map((id,index)=>({id,source:'stocksnap',tags:[{name:'fashion'}],title:'Grey hoodie',creator:'Fixture author',foreign_landing_url:`https://example.org/photo/${index}`,license:'by-sa',license_version:'2.0',license_url:'https://creativecommons.org/licenses/by-sa/2.0/',width:300,height:450}))});
     }
     const p=JSON.parse(options.body).payload;actions.push(p.action);
     if(p.action==='inspect_references'){
-      assert.equal(p.imageCandidates.length,1);assert.match(p.imageCandidates[0].imageUrl,/^data:image\/jpeg;base64,/);
-      return Response.json({result:{status:'completed',references:[{referenceId:p.imageCandidates[0].referenceId,usable:true,matchedItemIds:[p.lockedItems[0].itemId],visibleSlots:['upper','bottom'],referenceQuality:'fashion',styleEvidence:'灰白配色与宽松廓形，上衣裤装完整，背景干净',description:'灰卫衣搭配牛仔裤，鞋未展示',styles:['简约日常'],scenes:['日常通勤'],effects:[],exploration:50}]}});
+      assert.equal(p.imageCandidates.length,3);assert.match(p.imageCandidates[0].imageUrl,/^data:image\/jpeg;base64,/);
+      return Response.json({result:{status:'completed',references:p.imageCandidates.map(image=>({referenceId:image.referenceId,usable:true,matchedItemIds:[p.lockedItems[0].itemId],visibleSlots:['upper','bottom'],referenceQuality:'fashion',styleEvidence:'灰白配色与宽松廓形，上衣裤装完整，背景干净',description:'灰卫衣搭配牛仔裤，鞋未展示',styles:['简约日常'],scenes:['日常通勤'],effects:[],exploration:50}))}});
     }
-    const id=p.action==='revise'?p.originalOutfit.referenceId:p.referenceCandidates[0].referenceId;
-    return Response.json({result:{status:'completed',outfits:[{referenceId:id,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'灰色卫衣搭配',reason:'通勤使用舒适鞋履',items:[{id:'bottom',name:'蓝色牛仔裤'},{id:'shoes',name:'运动鞋'}]}]}});
+    const candidates=p.action==='revise'?[{referenceId:p.originalOutfit.referenceId}]:p.referenceCandidates;
+    return Response.json({result:{status:'completed',outfits:candidates.slice(0,p.count||1).map(candidate=>({referenceId:candidate.referenceId,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'灰色卫衣搭配',reason:'通勤使用舒适鞋履',items:[{id:'bottom',name:'蓝色牛仔裤'},{id:'shoes',name:'运动鞋'}]}))}});
   }});
   const server=http.createServer((req,res)=>api.handle(req,res,new URL(req.url,'http://local').pathname));
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -46,14 +46,14 @@ test('non-blazer HTTP flow searches and inspects photos, serves cached images, r
   const item=await request('/api/items',{slot:'upper',sample:true});
   await request('/api/items/'+item.itemId,{name:'我的灰色卫衣',attributes:{slot:'upper',subtype:'卫衣',colors:['灰色']}},'PATCH');
   const result=await request('/api/recommendations',{itemIds:[item.itemId],requirements});
-  assert.deepEqual(actions,['inspect_references','recommend']);assert.equal(result.outfits.length,1);
+  assert.deepEqual(actions,['inspect_references','recommend']);assert.equal(result.outfits.length,3);
   const outfit=result.outfits[0];assert.equal(outfit.items[0].name,'我的灰色卫衣');assert.equal(outfit.credit,'Fixture author');
   assert.match(outfit.photoChanges,/Resized/);
   const image=await fetch(base+outfit.image);assert.equal(image.status,200);assert.equal(image.headers.get('content-type'),'image/jpeg');
   const revised=(await request('/api/outfits/'+outfit.id+'/revisions',{version:1,note:'使用运动鞋',keepIds:['bottom']})).outfit;
   assert.equal(revised.referenceId,outfit.referenceId);assert.equal(revised.version,2);
   const saved=(await request('/api/plans',{outfitId:outfit.id})).plan;assert.equal(saved.outfit.credit,'Fixture author');
-  const more=await request('/api/recommendations',{itemIds:[item.itemId],requirements,excludeReferenceIds:[outfit.referenceId]});
+  const more=await request('/api/recommendations',{itemIds:[item.itemId],requirements,excludeReferenceIds:result.outfits.map(o=>o.referenceId)});
   assert.equal(more.outfits.length,0);assert.deepEqual(actions,['inspect_references','recommend','revise']);
 });
 test('trust boundaries reject invalid profile, image, invented photo and dropped locked clothing',async()=>{
@@ -68,18 +68,20 @@ test('trust boundaries reject invalid profile, image, invented photo and dropped
   assert.equal(result[0].items[0].name,'我的西装');
   assert.throws(()=>validateOutfits({outfits:[{...row,referenceId:'made-up'}]},[reference],locked,1));
   assert.throws(()=>validateOutfits({outfits:[{...row,lockedItemIds:[]}]},[reference],locked,1));
+  assert.throws(()=>validateOutfits({outfits:[row]},[reference],locked,3),/3 套/);
 });
 
 test('HTTP flow isolates visitors, preserves kept items, rejects stale revisions and persists plan snapshots',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'rewear-test-'));
   let calls=0;
-  const api=createApi({dataDir:directory,references:[reference],config:{REWEAR_AI_PROVIDER:'coze',PHOTO_SEARCH_ENABLED:'0',COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(_,options)=>{
+  const fixtureReferences=[reference,{...reference,id:'test-photo-2'},{...reference,id:'test-photo-3'}];
+  const api=createApi({dataDir:directory,references:fixtureReferences,config:{REWEAR_AI_PROVIDER:'coze',PHOTO_SEARCH_ENABLED:'0',COZE_ANALYZE_BASE_URL:'https://workflow.test',COZE_ANALYZE_TOKEN:'test-only',COZE_STYLIST_BASE_URL:'https://workflow.test',COZE_STYLIST_TOKEN:'test-only'},fetch:async(_,options)=>{
     calls++;
     const p=JSON.parse(options.body).payload;
     if(p.question==='触发无效结构测试')return new Response(JSON.stringify({result:{status:'error',warnings:['invalid_model_output'],outfits:[]}}));
-    const row={referenceId:reference.id,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'按要求保留黑西装',reason:'适合通勤，步行使用平底鞋',items:[{id:'bottom',name:'灰色直筒裤'},{id:'shoes',name:'舒适平底鞋'}]};
+    const row={referenceId:p.originalOutfit?.referenceId||reference.id,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'按要求保留黑西装',reason:'适合通勤，步行使用平底鞋',items:[{id:'bottom',name:'灰色直筒裤'},{id:'shoes',name:'舒适平底鞋'}]};
     if(p.action==='revise')row.items=[{id:'shoes',name:'黑色运动鞋'}];
-    return new Response(JSON.stringify({result:p.action==='answer'?{answer:'可以选择低帮运动鞋。'}:{status:'completed',outfits:[row]}}));
+    return new Response(JSON.stringify({result:p.action==='answer'?{answer:'可以选择低帮运动鞋。'}:{status:'completed',outfits:p.action==='recommend'?p.referenceCandidates.slice(0,p.count).map(candidate=>({...row,referenceId:candidate.referenceId})):[row]}}));
   }});
   const server=http.createServer((req,res)=>api.handle(req,res,new URL(req.url,'http://local').pathname));
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -96,8 +98,8 @@ test('HTTP flow isolates visitors, preserves kept items, rejects stale revisions
   assert.equal((await request('/api/items/'+item.itemId,{name:'我的黑西装'},'PATCH')).status,200);
   const generated=await request('/api/recommendations',{itemIds:[item.itemId],requirements});
   assert.equal(generated.status,200);
-  assert.equal(generated.body.status,'insufficient_references');
-  assert.ok(generated.body.warnings.some(w=>w.includes('1 套')));
+  assert.equal(generated.body.status,'completed');
+  assert.equal(generated.body.outfits.length,3);
   const outfit=generated.body.outfits[0];
   assert.equal(outfit.items[0].name,'我的黑西装');
   assert.equal(outfit.match.percent,100);

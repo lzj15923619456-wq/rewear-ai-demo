@@ -84,7 +84,7 @@ test('image search caches safe proxy downloads and excludes duplicate photos acr
   assert.equal(helper.image('../../private.env'),null);
 });
 
-test('Unsplash is queried only as an optional fallback and its image is not written to disk',async t=>{
+test('configured Unsplash joins the candidate pool and its image is not written to disk',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'rewear-unsplash-test-'));
   const db=new DatabaseSync(path.join(directory,'test.sqlite'));t.after(()=>db.close());
   const bytes=await sharp({create:{width:300,height:450,channels:3,background:'#456'}}).jpeg().toBuffer();

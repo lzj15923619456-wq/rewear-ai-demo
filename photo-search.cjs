@@ -143,8 +143,8 @@ function createPhotoSearch({ db, dataDir, fetcher=fetch, unsplashKey='' }) {
     const excludedHashes=[];
     for(const id of exclude){const uuid=id.replace(/^openverse-/,'');const filename=UUID.test(uuid)?path.join(directory,uuid+'.jpg'):null;if(filename&&fs.existsSync(filename))excludedHashes.push(await hashImage(fs.readFileSync(filename)));}
     const open=(await openverse(queries,page)).filter(photo=>!exclude.includes(photo.id)).sort((a,b)=>priority(b)-priority(a)).slice(0,40);report.openverseCandidates=open.length;
-    const loaded=[];await load(open.slice(0,16),loaded,excludedHashes);
-    if(loaded.length<12&&unsplashKey){
+    const loaded=[];await load(open.slice(0,unsplashKey?10:16),loaded,excludedHashes);
+    if(unsplashKey){
       report.providers.push('unsplash');
       try{const fallback=(await unsplash(queries.slice(1))).filter(photo=>!exclude.includes(photo.id)).sort((a,b)=>priority(b)-priority(a));report.unsplashCandidates=fallback.length;await load(fallback,loaded,excludedHashes);}
       catch(error){report.warnings.push(error.message||'Unsplash 兜底暂不可用');}

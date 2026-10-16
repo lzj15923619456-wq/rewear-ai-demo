@@ -5,10 +5,11 @@ const {createApi}=require('../api.cjs');
 const {createLlm}=require('../agents/llm.cjs');
 const {createAgents}=require('../agents/orchestrator.cjs');
 const sharp=require('sharp');
+const ruleReferences=require('../references.json').map((reference,index)=>index===2?{...reference,garments:[{slot:'upper',subtype:'blazer',colors:['black']},{slot:'bottom',subtype:'trousers',colors:['grey']},{slot:'shoes',subtype:'flats',colors:['black']}]}:reference);
 const requirements={personal:{性别:'女性',年龄:29,'身高（cm）':165},scenes:['周末出门'],styles:['简约日常'],avoids:[],changeAmount:50,note:'走很多路',budget:300};
-async function fixture(t,config={},fetcher){
+async function fixture(t,config={},fetcher,references){
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'rewear-agents-'));
-  const api=createApi({dataDir:directory,config:{PHOTO_SEARCH_ENABLED:'0',...config},...(fetcher?{fetch:fetcher}:{})});
+  const api=createApi({dataDir:directory,config:{PHOTO_SEARCH_ENABLED:'0',...config},...(fetcher?{fetch:fetcher}:{}),...(references?{references}:{})});
   const server=http.createServer((req,res)=>api.handle(req,res,new URL(req.url,'http://local').pathname));
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   t.after(async()=>{await new Promise(resolve=>server.close(resolve));api.close();fs.rmSync(directory,{recursive:true,force:true});});
@@ -22,7 +23,7 @@ async function fixture(t,config={},fetcher){
   return {request,item};
 }
 test('no-key stream is explicit rule mode, keeps ownership, never calls Coze, persists budget and anonymous preference memory',async t=>{
-  const {request,item}=await fixture(t,{COZE_STYLIST_BASE_URL:'https://unused.invalid',COZE_STYLIST_TOKEN:'legacy-unused'},()=>assert.fail('No model or search should run without a key'));
+  const {request,item}=await fixture(t,{COZE_STYLIST_BASE_URL:'https://unused.invalid',COZE_STYLIST_TOKEN:'legacy-unused'},()=>assert.fail('No model or search should run without a key'),ruleReferences);
   assert.equal((await(await request('/api/agent/status')).json()).mode,'rules');
   const i=await item();
   const stream=await request('/api/agent/run',{itemIds:[i.itemId],requirements});
@@ -49,12 +50,12 @@ test('direct multi-agent flow forwards profile and confirmed memory, ranks only 
     if(system.includes('你是主 Agent')){assert.equal(request.model,'main-test');actions.push('main');assert.equal(p.profile.heightCm,165);assert.deepEqual(p.preferences,['更休闲']);result={status:'completed',summary:'周末步行，保留西装',constraints:['走很多路'],questions:[]};}
     else if(system.includes('你是穿着复盘 Agent')){assert.equal(request.model,'review-test');actions.push('review');result={summary:'下次更休闲',preferences:['少些正式感']};}
     else if(system.includes('你是衣柜落地 Agent')){assert.equal(request.model,'wardrobe-test');actions.push(p.action);result=p.action==='revise'?(p.revision.note.includes('冲突')?{status:'needs_confirmation',outfits:[],questions:['具体要保留哪一项？'],warnings:[]}:{status:'completed',outfits:[{referenceId:p.originalOutfit.referenceId,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'保留裤装换鞋',reason:'根据步行要求调整鞋履',items:[{id:'bottom',name:'模型想改的裤装'},{id:'shoes',name:'黑色平底运动鞋'}]}]}):{status:'completed',answer:'考虑轻便鞋履'};}
-    else {assert.equal(request.model,'stylist-test');actions.push('stylist');assert.equal(p.requirements.budget,300);assert.ok(p.referenceCandidates[0].baseline);result={status:'completed',outfits:[{referenceId:p.referenceCandidates[0].referenceId,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'周末西装',reason:'根据步行需求建议轻便鞋',difference:'鞋子与原照不同',items:[{id:'bottom',name:'蓝色牛仔裤'},{id:'shoes',name:'运动鞋'}]}]};}
+    else {assert.equal(request.model,'stylist-test');actions.push('stylist');assert.equal(p.requirements.budget,300);assert.ok(p.referenceCandidates[0].baseline);result={status:'completed',outfits:p.referenceCandidates.slice(0,p.count).map(candidate=>({referenceId:candidate.referenceId,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'周末西装',reason:'根据步行需求建议轻便鞋',difference:'鞋子与原照不同',items:[{id:'bottom',name:'蓝色牛仔裤'},{id:'shoes',name:'运动鞋'}]}))};}
     return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(result)}}]});
   });
   const i=await item();await request('/api/agent/memory',{preferences:['更休闲']});
   const stream=await request('/api/agent/run',{itemIds:[i.itemId],requirements});const events=(await stream.text()).trim().split('\n').map(JSON.parse),result=events.at(-1).data.result;
-  assert.equal(result.mode,'ai');assert.equal(result.outfits.length,1);assert.deepEqual(actions,['main','stylist','main']);
+  assert.equal(result.mode,'ai');assert.equal(result.outfits.length,3);assert.deepEqual(actions,['main','stylist','main']);
   const outfit=result.outfits[0];assert.equal(outfit.items[0].name,i.name);
   const answer=await(await request('/api/agent/task',{task:'answer',outfitId:outfit.id,question:'可以换鞋吗'})).json();assert.match(answer.answer,/轻便/);
   const question=await(await request('/api/agent/task',{task:'revise',outfitId:outfit.id,version:outfit.version,keepIds:['bottom'],note:'保留条件冲突'})).json();
@@ -90,14 +91,14 @@ test('network inspection uses bounded batches, preserves successful batches and 
     }else{
       const p=JSON.parse(body.messages[1].content);
       if(body.model==='stylist')assert.ok(p.referenceCandidates.every(c=>c.styleEvidence),'Photo styling evidence must reach the recommender');
-      result=body.model==='main'?{status:'completed',summary:'保留卫衣',constraints:[],questions:[]}:{status:'completed',outfits:p.referenceCandidates.map(c=>({referenceId:c.referenceId,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'卫衣搭配',reason:'舒适休闲',items:[{id:'bottom',name:'牛仔裤'},{id:'shoes',name:'运动鞋'}]}))};
+      result=body.model==='main'?{status:'completed',summary:'保留卫衣',constraints:[],questions:[]}:{status:'completed',outfits:p.referenceCandidates.slice(0,p.count).map(c=>({referenceId:c.referenceId,lockedItemIds:p.lockedItems.map(i=>i.itemId),title:'卫衣搭配',reason:'舒适休闲',items:[{id:'bottom',name:'牛仔裤'},{id:'shoes',name:'运动鞋'}]}))};
     }
     return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(result)}}]});
   });
   const i=await item();await request('/api/items/'+i.itemId,{name:'我的灰卫衣',attributes:{slot:'upper',subtype:'卫衣',colors:['灰色']}},'PATCH');
   const response=await request('/api/agent/run',{itemIds:[i.itemId],requirements});
   const events=(await response.text()).trim().split('\n').map(JSON.parse),result=events.at(-1).data.result;
-  assert.equal(result.mode,'ai');assert.equal(result.outfits.length,6);assert.equal(peak,1);assert.deepEqual(batches.map(b=>b.length),[6,2]);
+  assert.equal(result.mode,'ai');assert.equal(result.outfits.length,3);assert.equal(peak,1);assert.deepEqual(batches.map(b=>b.length),[6,2]);
   assert.ok(result.outfits.every(o=>o.referenceId.startsWith('openverse-')));
   assert.ok(result.warnings.some(w=>w.includes('视觉核对不可用')));assert.ok(result.warnings.some(w=>w.includes('核对 6 张')));
   assert.ok(events.some(e=>e.agent==='reference'&&e.type==='log'&&e.data.message.includes('符合单品要求')));
@@ -198,7 +199,7 @@ test('review-only configuration still enforces AI quota and saves feedback befor
   let calls=0;
   const {request,item}=await fixture(t,{REWEAR_LLM_BASE_URL:'https://llm.example/v1',REWEAR_LLM_API_KEY:'test-only',REWEAR_MODEL_REVIEW:'review-only',AI_USER_DAILY_LIMIT:'1'},async(_,options)=>{
     calls++;assert.equal(JSON.parse(options.body).model,'review-only');return Response.json({choices:[{finish_reason:'stop',message:{content:'{"summary":"更休闲","preferences":["更休闲"]}'}}]});
-  });
+  },ruleReferences);
   const status=await(await request('/api/agent/status')).json();assert.equal(status.configuredAgents.review,true);assert.equal(status.configuredAgents.main,false);
   const i=await item();const result=await(await request('/api/recommendations',{itemIds:[i.itemId],requirements})).json();assert.equal(result.mode,'rules');
   const plan=(await(await request('/api/plans',{outfitId:result.outfits[0].id})).json()).plan;

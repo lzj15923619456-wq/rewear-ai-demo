@@ -118,7 +118,7 @@ async function requestOutfits(more) {
   } finally { aiBusy=false; }
 }
 loadMoreOutfits = () => AgentHub.backend?requestOutfits(true):toast('静态参考已展示；启动后端才能检索更多');
-moreOutfitCard = count => `<div class="more-outfits-card"><span class="eyebrow">MORE WAYS TO WEAR</span><h2>${count?'再看看其他穿法？':'先把条件核对一下'}</h2><p>${esc((state.aiWarnings||[]).join(' ')||'保留当前单品和要求，再检索一组不同的真实参考。')}</p><button class="btn primary wide" onclick="loadMoreOutfits()">寻找更多穿搭</button><small>最多六套；真实参考不足时不会重复凑数。</small><button class="text-btn" onclick="state.intakeStep=0;go('intake')">修改我的需求</button></div>`;
+moreOutfitCard = count => `<div class="more-outfits-card"><span class="eyebrow">MORE WAYS TO WEAR</span><h2>${count?'再看看其他穿法？':'先把条件核对一下'}</h2><p>${esc((state.aiWarnings||[]).join(' ')||'保留当前单品和要求，再检索一组不同的真实参考。')}</p><button class="btn primary wide" onclick="loadMoreOutfits()">寻找更多穿搭</button><small>每组生成三套；合格参考不足三张时不会重复图片凑数。</small><button class="text-btn" onclick="state.intakeStep=0;go('intake')">修改我的需求</button></div>`;
 
 const presetDetail=detail;
 detail = id => {
